@@ -5,6 +5,9 @@ import { AuthModule } from './auth/auth.module'
 import { JwtModule } from '@nestjs/jwt'
 import config from './config/config'
 import { MongooseModule } from '@nestjs/mongoose'
+import { APP_GUARD } from '@nestjs/core'
+import { AuthenticationGuard } from './guards/authentication.guard'
+import { AuthorizationGuard } from './guards/authorization.guard'
 
 const options = {
   colorize: true,
@@ -49,6 +52,15 @@ const options = {
     AuthModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AuthenticationGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AuthorizationGuard,
+    },
+  ],
 })
 export class AppModule {}

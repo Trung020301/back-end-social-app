@@ -15,6 +15,7 @@ import { User } from 'src/schema/user.schema'
 import { NOT_FOUND, USER_EXISTED } from 'src/util/constant'
 import { SignInDto } from 'src/dtos/user/sign-in.dto'
 import { RefreshToken } from 'src/schema/refresh-token.schema'
+import { IStoreToken, IUserToken } from 'src/util/interface'
 
 @Injectable()
 export class AuthService {
@@ -53,40 +54,63 @@ export class AuthService {
     if (!isPasswordMatch) {
       throw new NotFoundException(NOT_FOUND)
     }
-    const tokens = await this.generateUserTokens(user._id)
+    const tokens = await this.generateUserTokens({
+      userId: user._id,
+      role: user.role,
+    })
     return {
       ...tokens,
       userId: user._id,
     }
   }
 
+  async signOut(userId: Types.ObjectId) {
+    const token = await this.RefreshTokenModel.findOneAndDelete(userId)
+
+    console.log('Token', token)
+
+    if (!token) {
+      throw new NotFoundException(NOT_FOUND)
+    }
+  }
+
   async refreshTokens(refreshToken: string) {
-    const token = await this.RefreshTokenModel.findOneAndDelete({
+    const token = await this.RefreshTokenModel.findOne({
       token: refreshToken,
       expiryDate: { $gte: new Date() },
     })
     if (!token) {
       throw new UnauthorizedException()
     }
-    return this.generateUserTokens(token.userId)
+    return this.generateUserTokens({ userId: token.userId, role: token.role })
   }
 
-  async generateUserTokens(userId: Types.ObjectId) {
-    const accessToken = this.jwtService.sign({ userId }, { expiresIn: '1d' })
+  async generateUserTokens(payload: IUserToken) {
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '1d' })
     const refreshToken = uuidv4()
-    await this.storeRefreshToken(accessToken, userId)
+    await this.storeRefreshToken({ token: refreshToken, ...payload })
 
     return { accessToken, refreshToken }
   }
 
-  async storeRefreshToken(token: string, userId: Types.ObjectId) {
+  async storeRefreshToken(payload: IStoreToken) {
     const expiryDate = new Date()
     expiryDate.setDate(expiryDate.getDate() + 3)
 
-    await this.RefreshTokenModel.create({
-      token,
-      userId,
-      expiryDate,
-    })
+    await this.RefreshTokenModel.updateOne(
+      {
+        userId: payload.userId,
+      },
+      {
+        $set: {
+          expiryDate,
+          token: payload.token,
+          role: payload.role,
+        },
+      },
+      {
+        upsert: true,
+      },
+    )
   }
 }

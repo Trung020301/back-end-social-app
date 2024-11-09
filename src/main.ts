@@ -3,6 +3,7 @@ import { AppModule } from './app.module'
 import { Logger, LoggerErrorInterceptor } from 'nestjs-pino'
 import { ValidationPipe } from '@nestjs/common'
 import { AllExceptionsFilter } from './exception-filters/all-exception.filter'
+import { corsOptions } from './cors/corsConfig'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -18,6 +19,7 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   )
+  app.enableCors(corsOptions)
 
   await app.listen(process.env.PORT ?? 3000)
 }

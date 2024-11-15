@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { CreateUserDto } from 'src/dtos/user/create-user.dto'
 import { User } from 'src/schema/user.schema'
-import { NOT_FOUND, USER_EXISTED } from 'src/util/constant'
+import { NOT_FOUND, USER_EXISTED, USER_NOT_FOUND } from 'src/util/constant'
 import { SignInDto } from 'src/dtos/user/sign-in.dto'
 import { RefreshToken } from 'src/schema/refresh-token.schema'
 import { IStoreToken, IUserToken } from 'src/util/interface'
@@ -45,7 +45,7 @@ export class AuthService {
       username: signInDto.username,
     })
     if (!user) {
-      throw new NotFoundException(NOT_FOUND)
+      throw new NotFoundException(USER_NOT_FOUND)
     }
     const isPasswordMatch = await bcrypt.compare(
       signInDto.password,
@@ -74,6 +74,7 @@ export class AuthService {
     }
   }
 
+  // * Common method
   async refreshTokens(refreshToken: string) {
     const token = await this.RefreshTokenModel.findOne({
       token: refreshToken,

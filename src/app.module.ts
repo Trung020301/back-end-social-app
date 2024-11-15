@@ -8,6 +8,9 @@ import { MongooseModule } from '@nestjs/mongoose'
 import { APP_GUARD } from '@nestjs/core'
 import { AuthenticationGuard } from './guards/authentication.guard'
 import { AuthorizationGuard } from './guards/authorization.guard'
+import { PostModule } from './post/post.module'
+import { CloudinaryModule } from './cloudinary/cloudinary.module'
+import { UserModule } from './user/user.module'
 
 const options = {
   colorize: true,
@@ -50,6 +53,9 @@ const options = {
       inject: [ConfigService],
     }),
     AuthModule,
+    PostModule,
+    CloudinaryModule,
+    UserModule,
   ],
   controllers: [],
   providers: [

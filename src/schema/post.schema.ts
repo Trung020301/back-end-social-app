@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import mongoose, { HydratedDocument } from 'mongoose'
+import { MediaTypeEnum, VisibilityPostEnum } from 'src/util/enum'
 
 export type PostDocument = HydratedDocument<Post>
 
@@ -8,14 +9,24 @@ export type PostDocument = HydratedDocument<Post>
   versionKey: false,
 })
 export class Post {
-  @Prop({ isRequired: true, type: mongoose.Types.ObjectId, ref: 'User' })
+  @Prop({
+    required: true,
+    type: mongoose.Types.ObjectId,
+    ref: 'User',
+  })
   userId: mongoose.Types.ObjectId
-
-  @Prop({ isRequired: true })
-  images: string[]
 
   @Prop()
   content?: string
+
+  @Prop({ enum: MediaTypeEnum, required: true })
+  MediaTypeEnum: MediaTypeEnum
+
+  @Prop()
+  mediaUrl: string[]
+
+  @Prop({ default: VisibilityPostEnum.public })
+  visibility: VisibilityPostEnum
 
   @Prop({ type: mongoose.Types.ObjectId, ref: 'User', default: [] })
   likes: mongoose.Types.ObjectId[]

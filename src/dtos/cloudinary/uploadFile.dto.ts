@@ -1,8 +1,8 @@
-import { IsString } from 'class-validator'
+import { IsOptional, IsString } from 'class-validator'
 import { CloudinaryResourceTypeEnum } from 'src/util/enum'
 
 export class UploadFileDto {
-  @IsString()
+  @IsOptional()
   folder: string
 
   @IsString()

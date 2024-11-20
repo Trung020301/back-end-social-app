@@ -17,6 +17,7 @@ import { FilesInterceptor } from '@nestjs/platform-express'
 import { ToggleLikePostDto } from 'src/dtos/post/toggle-like-post.dto'
 import { ChangeVisibilityPostDto } from 'src/dtos/post/change-visibility.dto'
 import { DeletePostDto } from 'src/dtos/post/delete-post.dto'
+import { UpdatePostDto } from 'src/dtos/post/update-post.dto'
 
 @Controller('post')
 export class PostController {
@@ -73,5 +74,15 @@ export class PostController {
   @Delete()
   async deletePost(@Req() req, @Body() deletePostDto: DeletePostDto) {
     return this.postService.deletePost(req.user.userId, deletePostDto.postId)
+  }
+
+  @Patch('update-post')
+  @UseInterceptors(FilesInterceptor('files'))
+  async updatePost(
+    @Req() req,
+    @Body() updatePostDto: UpdatePostDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    return this.postService.updatePost(req.user.userId, updatePostDto, files)
   }
 }

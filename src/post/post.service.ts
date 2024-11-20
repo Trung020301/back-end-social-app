@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Request, Response } from 'express'
 import { Model, Types } from 'mongoose'
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service'
 import { ChangeVisibilityPostDto } from 'src/dtos/post/change-visibility.dto'
 import { CreatePostDto } from 'src/dtos/post/create-post.dto'
+import { UpdatePostDto } from 'src/dtos/post/update-post.dto'
 import { Post } from 'src/schema/post.schema'
 import { User } from 'src/schema/user.schema'
 import { APIFeatures } from 'src/util/apiFeatures'
@@ -25,10 +30,10 @@ export class PostService {
     userId: Types.ObjectId,
     files: Express.Multer.File[],
   ) {
-    const uploadFiles = await this.cloudinaryService.uploadFiles(
-      files,
-      createPostDto,
-    )
+    const uploadFiles = await this.cloudinaryService.uploadFiles(files, {
+      folder: 'posts',
+      resourceType: createPostDto.resourceType,
+    })
     const mediaUrl = uploadFiles.map((file) => ({
       url: file.secure_url,
       public_id: file.public_id,
@@ -135,6 +140,53 @@ export class PostService {
     const post = await this.findPostById(postId)
     if (post.userId.toString() !== requestUserId.toString()) {
       throw new NotFoundException('Bạn không có quyền xóa bài viết này')
+    }
+  }
+
+  async updatePost(
+    requestUserId: Types.ObjectId,
+    updatePostDto: UpdatePostDto,
+    files: Express.Multer.File[],
+  ) {
+    const post = await this.findPostById(updatePostDto.postId)
+    if (post.userId.toString() !== requestUserId.toString()) {
+      throw new UnauthorizedException(
+        'Bạn không có quyền chỉnh sửa bài viết này',
+      )
+    }
+
+    let hasChanges = false
+
+    if (updatePostDto?.content !== post.content) {
+      post.content = updatePostDto.content
+      hasChanges = true
+    }
+
+    if (updatePostDto?.visibility !== post.visibility) {
+      post.visibility = updatePostDto.visibility
+      hasChanges = true
+    }
+
+    if (files && files.length > 0) {
+      const uploadFiles = await this.cloudinaryService.uploadFiles(files, {
+        folder: 'posts',
+        resourceType: updatePostDto.resourceType,
+      })
+      const mediaUrl = uploadFiles.map((file) => ({
+        url: file.secure_url,
+        public_id: file.public_id,
+      }))
+
+      if (post.mediaUrl.length > 0) {
+        await this.deletedImage(post.mediaUrl)
+      }
+
+      post.mediaUrl = mediaUrl
+      hasChanges = true
+    }
+
+    if (hasChanges) {
+      await post.save()
     }
   }
 

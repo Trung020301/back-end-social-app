@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Post,
   UploadedFile,
   UploadedFiles,
@@ -33,4 +34,9 @@ export class CloudinaryController {
   ) {
     return this.cloudinaryService.uploadFiles(files, uploadFileDto)
   }
+
+  /* The line `// @Delete('file')` is a commented-out code in the TypeScript file. In TypeScript,
+  comments starting with `//` are single-line comments that are ignored by the compiler and are used
+  for adding explanations or notes in the code. */
+  // @Delete('file')
 }

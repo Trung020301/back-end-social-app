@@ -9,10 +9,18 @@ import * as bcrypt from 'bcrypt'
 import { UpdatePasswordDto } from 'src/dtos/user/update-password.dto'
 import { User } from 'src/schema/user.schema'
 import { USER_NOT_FOUND } from 'src/util/constant'
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service'
+import { CloudinaryResourceTypeEnum } from 'src/util/enum'
+import { RefreshToken } from 'src/schema/refresh-token.schema'
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private UserModel: Model<User>) {}
+  constructor(
+    @InjectModel(User.name) private UserModel: Model<User>,
+    @InjectModel(RefreshToken.name)
+    private RefreshTokenModel: Model<RefreshToken>,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   // ? [GET METHOD] *********************************************************************
 
@@ -23,10 +31,13 @@ export class UserService {
     return user
   }
 
-  async getUserByUsername(username: string) {
+  async getUserByUsername(userId: mongoose.Types.ObjectId, username: string) {
     const user = await this.UserModel.findOne({
       username,
     })
+    if (user.blockedUsers.includes(userId))
+      throw new BadRequestException('Người dùng này không tồn tại!')
+
     if (!user) throw new NotFoundException(USER_NOT_FOUND)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { role, password, ...result } = user.toObject()
@@ -52,7 +63,9 @@ export class UserService {
   async toggleFollowUser(
     userId: mongoose.Types.ObjectId,
     targetUserId: mongoose.Types.ObjectId,
-  ) {
+  ): Promise<{
+    isFollowing: boolean
+  }> {
     if (userId.toString() === targetUserId.toString())
       throw new BadRequestException('Bạn không thể theo dõi bản thân mình.')
     const user = await this.findUserById(userId)
@@ -95,17 +108,83 @@ export class UserService {
   }
 
   // ? [PUT METHOD] *********************************************************************
-  async updateAvatar(userId: mongoose.Types.ObjectId, avatar: string) {
+  async changeAvatar(
+    userId: mongoose.Types.ObjectId,
+    file: Express.Multer.File,
+  ) {
     const user = await this.findUserById(userId)
-    user.avatar = avatar
+    const uploadUrl = await this.cloudinaryService.uploadFile(file, {
+      resourceType: CloudinaryResourceTypeEnum.image,
+      folder: 'avatars',
+    })
+    if (user.avatar.public_id) this.deleteAvatar(user.avatar.public_id)
+    user.avatar = {
+      public_id: uploadUrl.public_id,
+      url: uploadUrl.url,
+    }
+    await user.save()
+  }
+
+  // ? [DELETE METHOD] *********************************************************************
+  async deleteMyAccount(userId: mongoose.Types.ObjectId) {
+    const user = await this.findUserById(userId)
+    const { avatar, followers, following } = user
+
+    const token = await this.RefreshTokenModel.findOneAndDelete(userId)
+    if (!token) throw new NotFoundException('Token không tồn tại')
+
+    if (avatar.public_id) this.deleteAvatar(avatar.public_id)
+
+    await this.UserModel.updateMany(
+      { _id: { $in: followers } },
+      { $pull: { following: userId } },
+    )
+
+    await this.UserModel.updateMany(
+      { _id: { $in: following } },
+      { $pull: { followers: userId } },
+    )
+
+    await this.UserModel.findByIdAndDelete(userId)
+  }
+
+  async blockUser(
+    userId: mongoose.Types.ObjectId,
+    targetUserId: mongoose.Types.ObjectId,
+  ) {
+    if (userId.toString() === targetUserId.toString())
+      throw new BadRequestException('Bạn không thể chặn bản thân mình')
+    const user = await this.findUserById(userId)
+    const targetUser = await this.findUserById(targetUserId)
+    if (!user || !targetUser) throw new NotFoundException(USER_NOT_FOUND)
+    if (user.blockedUsers.includes(targetUserId))
+      throw new BadRequestException('Người dùng này đã bị chặn')
+    user.blockedUsers = [...user.blockedUsers, targetUserId]
+    await user.save()
+  }
+
+  async unblockUser(
+    userId: mongoose.Types.ObjectId,
+    targetUserId: mongoose.Types.ObjectId,
+  ) {
+    const user = await this.findUserById(userId)
+    if (!user.blockedUsers.includes(targetUserId))
+      throw new BadRequestException('Người dùng này chưa bị chặn')
+    user.blockedUsers = user.blockedUsers.filter(
+      (id) => id.toString() !== targetUserId.toString(),
+    )
     await user.save()
   }
 
   // * Common function
-  private async findUserById(userId: mongoose.Types.ObjectId) {
+  async findUserById(userId: mongoose.Types.ObjectId) {
     const user = await this.UserModel.findById(userId)
     if (!user) throw new NotFoundException(USER_NOT_FOUND)
     return user
+  }
+
+  private async deleteAvatar(public_id: string) {
+    await this.cloudinaryService.deleteFile(public_id)
   }
 
   // * Custom function

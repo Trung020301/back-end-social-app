@@ -10,3 +10,8 @@ export interface IStoreToken {
   token: string
   role: string
 }
+
+export interface ImageInterface {
+  public_id: string
+  url: string
+}

@@ -6,3 +6,8 @@ export const NOT_FOUND = 'not_found'
 export const INVALID_TOKEN = 'invalid_token'
 export const ACCESS_DENIED = 'access_denied'
 export const BAD_REQUEST = 'bad_request'
+export const SUCCESS = 'success'
+
+export const DEFAULT_PAGE = 1
+export const DEFAULT_LIMIT = 10
+export const MAX_LIMIT = 50

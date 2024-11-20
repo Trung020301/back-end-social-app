@@ -1,4 +1,9 @@
-import { Module } from '@nestjs/common'
+import {
+  // MiddlewareConsumer,
+  Module,
+  // NestModule,
+  // RequestMethod,
+} from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { LoggerModule } from 'nestjs-pino'
 import { AuthModule } from './auth/auth.module'
@@ -11,6 +16,9 @@ import { AuthorizationGuard } from './guards/authorization.guard'
 import { PostModule } from './post/post.module'
 import { CloudinaryModule } from './cloudinary/cloudinary.module'
 import { UserModule } from './user/user.module'
+import { AdminModule } from './admin/admin.module'
+// import { CheckBlockMiddleware } from './middlewares/user.middleware'
+// import { PostController } from './post/post.controller'
 
 const options = {
   colorize: true,
@@ -56,6 +64,7 @@ const options = {
     PostModule,
     CloudinaryModule,
     UserModule,
+    AdminModule,
   ],
   controllers: [],
   providers: [
@@ -69,4 +78,8 @@ const options = {
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  // configure(consumer: MiddlewareConsumer) {
+  //   consumer.apply(CheckBlockMiddleware).forRoutes(PostController)
+  // }
+}

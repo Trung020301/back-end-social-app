@@ -1,16 +1,16 @@
 import {
-  BadRequestException,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
   Injectable,
   Logger,
+  UnauthorizedException,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { JwtService } from '@nestjs/jwt'
 import { Request } from 'express'
 import { IS_PUBLIC_KEY } from 'src/decorators/public.decorator'
-import { ACCESS_DENIED, BAD_REQUEST } from 'src/util/constant'
+import { ACCESS_DENIED } from 'src/util/constant'
 
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
@@ -36,7 +36,7 @@ export class AuthenticationGuard implements CanActivate {
       request.user = payload
     } catch (e) {
       Logger.error(e.message)
-      throw new BadRequestException(BAD_REQUEST)
+      throw new UnauthorizedException(e.message)
     }
     return true
   }

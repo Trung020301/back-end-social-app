@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import mongoose, { HydratedDocument } from 'mongoose'
 import { MediaTypeEnum, VisibilityPostEnum } from 'src/util/enum'
+import { ImageInterface } from 'src/util/interface'
 
 export type PostDocument = HydratedDocument<Post>
 
@@ -23,7 +24,7 @@ export class Post {
   MediaTypeEnum: MediaTypeEnum
 
   @Prop()
-  mediaUrl: string[]
+  mediaUrl: ImageInterface[]
 
   @Prop({ default: VisibilityPostEnum.public })
   visibility: VisibilityPostEnum

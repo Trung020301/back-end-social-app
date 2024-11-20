@@ -1,16 +1,21 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
   Post,
   Put,
   Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common'
 import { UserService } from './user.service'
 import { ToggleFollowUserDto } from 'src/dtos/user/toggle-follow-user.dto'
 import { UpdatePasswordDto } from 'src/dtos/user/update-password.dto'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { InteractUserDto } from 'src/dtos/user/interact-user.dto'
 
 @Controller('user')
 export class UserController {
@@ -32,8 +37,8 @@ export class UserController {
   }
 
   @Get(':username')
-  async getUserByUsername(@Param() params: { username: string }) {
-    return this.userService.getUserByUsername(params.username)
+  async getUserByUsername(@Req() req, @Param() params: { username: string }) {
+    return this.userService.getUserByUsername(req.user.userId, params.username)
   }
 
   @Post('toggle-follow-user')
@@ -58,5 +63,32 @@ export class UserController {
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
     return this.userService.updatePassword(req.user.userId, updatePasswordDto)
+  }
+
+  @Put('change-avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  async changeAvatar(@Req() req, @UploadedFile() file: Express.Multer.File) {
+    return this.userService.changeAvatar(req.user.userId, file)
+  }
+
+  @Delete()
+  async deleteMyAccount(@Req() req) {
+    return this.userService.deleteMyAccount(req.user.userId)
+  }
+
+  @Post('interact/block-user')
+  async blockUser(@Req() req, @Body() blockUserDto: InteractUserDto) {
+    return this.userService.blockUser(
+      req.user.userId,
+      blockUserDto.targetUserId,
+    )
+  }
+
+  @Post('interact/unblock-user')
+  async unblockUser(@Req() req, @Body() unblockUserDto: InteractUserDto) {
+    return this.userService.unblockUser(
+      req.user.userId,
+      unblockUserDto.targetUserId,
+    )
   }
 }

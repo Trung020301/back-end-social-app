@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import mongoose, { HydratedDocument } from 'mongoose'
 import { AccountStatusEnum, Role } from 'src/util/enum'
+import { ImageInterface } from 'src/util/interface'
 
 export type UserDocument = HydratedDocument<User>
 
@@ -24,8 +25,8 @@ export class User {
   @Prop({ default: '' })
   bio: string
 
-  @Prop({ default: '' })
-  avatar: string
+  @Prop({ type: Object, default: {} })
+  avatar: ImageInterface
 
   @Prop({ default: false })
   hasStory: boolean
@@ -46,10 +47,10 @@ export class User {
   @Prop({ type: mongoose.Types.ObjectId, ref: 'User', default: [] })
   following: mongoose.Types.ObjectId[]
 
-  @Prop({ type: mongoose.Types.ObjectId, ref: 'User' })
-  blocked: mongoose.Types.ObjectId[]
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'User', default: [] })
+  blockedUsers: mongoose.Types.ObjectId[]
 
-  @Prop({ type: mongoose.Types.ObjectId, ref: 'Post' })
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'Post', default: [] })
   savedPosts: mongoose.Types.ObjectId[]
 }
 

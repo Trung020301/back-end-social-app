@@ -21,5 +21,6 @@ import { User, UserSchema } from 'src/schema/user.schema'
   ],
   controllers: [PostController],
   providers: [PostService, CloudinaryService],
+  exports: [PostService],
 })
 export class PostModule {}

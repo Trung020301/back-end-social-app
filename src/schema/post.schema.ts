@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import mongoose, { HydratedDocument } from 'mongoose'
+import mongoose, { Document, HydratedDocument } from 'mongoose'
 import { MediaTypeEnum, VisibilityPostEnum } from 'src/util/enum'
 import { ImageInterface } from 'src/util/interface'
 
@@ -9,7 +9,7 @@ export type PostDocument = HydratedDocument<Post>
   timestamps: true,
   versionKey: false,
 })
-export class Post {
+export class Post extends Document {
   @Prop({
     required: true,
     type: mongoose.Types.ObjectId,

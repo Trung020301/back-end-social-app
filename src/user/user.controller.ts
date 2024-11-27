@@ -8,6 +8,7 @@ import {
   Post,
   Put,
   Req,
+  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common'
@@ -16,11 +17,13 @@ import { ToggleFollowUserDto } from 'src/dtos/user/toggle-follow-user.dto'
 import { UpdatePasswordDto } from 'src/dtos/user/update-password.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { InteractUserDto } from 'src/dtos/user/interact-user.dto'
+import { Response } from 'express'
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  // ? [GET METHOD] *********************************************************************
   @Get('get-my-profile')
   async getMyProfile(@Req() req) {
     return this.userService.getMyProfile(req.user.userId)
@@ -41,6 +44,12 @@ export class UserController {
     return this.userService.getUserByUsername(req.user.userId, params.username)
   }
 
+  @Get('feed/news-feed')
+  async getNewsFeed(@Req() req, @Res() res: Response) {
+    return this.userService.getNewsFeed(req.user.userId, req, res)
+  }
+
+  // ? [POST METHOD] *********************************************************************
   @Post('toggle-follow-user')
   async toggleFollowUser(
     @Req() req,

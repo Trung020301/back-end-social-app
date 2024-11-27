@@ -8,8 +8,8 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service'
 
 // *Schema
 import { User, UserSchema } from 'src/schema/user.schema'
-import { Post, PostSchema } from 'src/schema/post.schema'
 import { RefreshToken } from 'src/schema/refresh-token.schema'
+import { Post, PostSchema } from 'src/schema/post.schema'
 
 @Module({
   imports: [

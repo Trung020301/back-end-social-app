@@ -8,15 +8,19 @@ import mongoose, { Model } from 'mongoose'
 import * as bcrypt from 'bcrypt'
 import { UpdatePasswordDto } from 'src/dtos/user/update-password.dto'
 import { User } from 'src/schema/user.schema'
-import { USER_NOT_FOUND } from 'src/util/constant'
+import { SUCCESS, USER_NOT_FOUND } from 'src/util/constant'
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service'
-import { CloudinaryResourceTypeEnum } from 'src/util/enum'
+import { CloudinaryResourceTypeEnum, VisibilityPostEnum } from 'src/util/enum'
 import { RefreshToken } from 'src/schema/refresh-token.schema'
+import { Request, Response } from 'express'
+import { Post } from 'src/schema/post.schema'
+import { APIFeatures } from 'src/util/apiFeatures'
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User.name) private UserModel: Model<User>,
+    @InjectModel(Post.name) private PostModel: Model<Post>,
     @InjectModel(RefreshToken.name)
     private RefreshTokenModel: Model<RefreshToken>,
     private readonly cloudinaryService: CloudinaryService,
@@ -56,6 +60,53 @@ export class UserService {
     const user = await this.UserModel.findById(userId)
 
     return user.following
+  }
+
+  async getNewsFeed(
+    userId: mongoose.Types.ObjectId,
+    req: Request,
+    res: Response,
+  ) {
+    const user = await this.findUserById(userId)
+
+    const followingUserIds = user.following.map((id) => id.toString())
+    const blockedUserIds = user.blockedUsers.map((id) => id.toString())
+
+    const features = new APIFeatures(
+      this.PostModel.find({
+        $or: [
+          {
+            visibility: VisibilityPostEnum.public,
+          },
+          {
+            userId,
+          },
+          {
+            userId: { $in: followingUserIds },
+          },
+        ],
+        userId: { $nin: blockedUserIds },
+      }),
+      req.query,
+    )
+      .filter()
+      .sorting()
+      .limit()
+      .pagination()
+
+    const posts = await features.mongooseQuery
+    const filteredPosts = posts.map(async (post) => {
+      const author = await this.findUserById(post.userId)
+      if (author.blockedUsers.includes(userId)) return null
+      return post
+    })
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        posts: posts,
+      },
+    })
   }
 
   // ? [POST METHOD] *********************************************************************

@@ -79,10 +79,10 @@ export class UserService {
             visibility: VisibilityPostEnum.public,
           },
           {
-            userId,
-          },
-          {
-            userId: { $in: followingUserIds },
+            $and: [
+              { visibility: VisibilityPostEnum.followers },
+              { userId: followingUserIds },
+            ],
           },
         ],
         userId: { $nin: blockedUserIds },
@@ -95,16 +95,21 @@ export class UserService {
       .pagination()
 
     const posts = await features.mongooseQuery
-    const filteredPosts = posts.map(async (post) => {
-      const author = await this.findUserById(post.userId)
-      if (author.blockedUsers.includes(userId)) return null
-      return post
-    })
+
+    const filteredPosts = await Promise.all(
+      posts.map(async (post) => {
+        const author = await this.findUserById(post.userId)
+        if (author.blockedUsers.includes(userId)) return null
+        return post
+      }),
+    )
+
+    filteredPosts.filter((post) => post !== null)
 
     res.status(200).json({
       status: SUCCESS,
       data: {
-        posts: posts,
+        posts: filteredPosts,
       },
     })
   }
@@ -207,11 +212,27 @@ export class UserService {
       throw new BadRequestException('Bạn không thể chặn bản thân mình')
     const user = await this.findUserById(userId)
     const targetUser = await this.findUserById(targetUserId)
+
+    const checkTargetUserIdHasFollowed = targetUser.following.includes(userId)
+    const checkTargetUserHasFollower = user.followers.includes(targetUserId)
+
     if (!user || !targetUser) throw new NotFoundException(USER_NOT_FOUND)
     if (user.blockedUsers.includes(targetUserId))
       throw new BadRequestException('Người dùng này đã bị chặn')
     user.blockedUsers = [...user.blockedUsers, targetUserId]
+
+    if (checkTargetUserHasFollower)
+      user.followers = user.followers.filter(
+        (id) => id.toString() !== targetUserId.toString(),
+      )
+
+    if (checkTargetUserIdHasFollowed)
+      targetUser.following = targetUser.following.filter(
+        (id) => id.toString() !== userId.toString(),
+      )
+
     await user.save()
+    await targetUser.save()
   }
 
   async unblockUser(

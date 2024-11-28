@@ -28,11 +28,15 @@ export class UserService {
 
   // ? [GET METHOD] *********************************************************************
 
-  async getMyProfile(userId: mongoose.Types.ObjectId): Promise<User> {
+  async getMyProfile(userId: mongoose.Types.ObjectId) {
     const user = await this.UserModel.findById(userId).select('-password')
     if (!user) throw new NotFoundException(USER_NOT_FOUND)
+    const posts = await this.PostModel.find({ userId }).sort({ createdAt: -1 })
 
-    return user
+    return {
+      user,
+      posts,
+    }
   }
 
   async getUserByUsername(userId: mongoose.Types.ObjectId, username: string) {

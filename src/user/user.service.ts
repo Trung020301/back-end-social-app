@@ -90,7 +90,7 @@ export class UserService {
           },
         ],
         userId: { $nin: blockedUserIds },
-      }),
+      }).populate('userId', 'username fullName avatar.url'),
       req.query,
     )
       .filter()
@@ -101,7 +101,7 @@ export class UserService {
     const posts = await features.mongooseQuery
 
     const filteredPosts = await Promise.all(
-      posts.map(async (post) => {
+      posts.map(async (post: Post) => {
         const author = await this.findUserById(post.userId)
         if (author.blockedUsers.includes(userId)) return null
         return post
@@ -114,6 +114,42 @@ export class UserService {
       status: SUCCESS,
       data: {
         posts: filteredPosts,
+      },
+    })
+  }
+
+  async getExploreUsers(
+    userId: mongoose.Types.ObjectId,
+    req: Request,
+    res: Response,
+  ) {
+    const user = await this.findUserById(userId)
+    const blockedUserIds = user.blockedUsers.map((id) => id.toString())
+    const select = '_id username fullName avatar blockedUsers followers'
+
+    const features = new APIFeatures(
+      this.UserModel.find({
+        _id: { $nin: blockedUserIds, $ne: userId },
+      }).select(select),
+      req.query,
+    )
+      .filter()
+      .sorting()
+      .limit()
+      .pagination()
+
+    const users = await features.mongooseQuery
+    const checkYouHasBeenBlocked = users.filter((user: User) =>
+      user.blockedUsers.includes(userId),
+    )
+    const filterUser: User[] = users.filter(
+      (user: User) => !checkYouHasBeenBlocked.includes(user),
+    )
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        users: filterUser,
       },
     })
   }

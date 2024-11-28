@@ -39,14 +39,19 @@ export class UserController {
     return this.userService.getFollowing(req.user.userId)
   }
 
-  @Get(':username')
-  async getUserByUsername(@Req() req, @Param() params: { username: string }) {
-    return this.userService.getUserByUsername(req.user.userId, params.username)
-  }
-
   @Get('feed/news-feed')
   async getNewsFeed(@Req() req, @Res() res: Response) {
     return this.userService.getNewsFeed(req.user.userId, req, res)
+  }
+
+  @Get('/explore-user')
+  async exploreUser(@Req() req, @Res() res: Response) {
+    return this.userService.getExploreUsers(req.user.userId, req, res)
+  }
+
+  @Get(':username')
+  async getUserByUsername(@Req() req, @Param() params: { username: string }) {
+    return this.userService.getUserByUsername(req.user.userId, params.username)
   }
 
   // ? [POST METHOD] *********************************************************************

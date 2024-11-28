@@ -19,6 +19,7 @@ import { UserModule } from './user/user.module'
 import { AdminModule } from './admin/admin.module'
 // import { CheckBlockMiddleware } from './middlewares/user.middleware'
 // import { PostController } from './post/post.controller'
+import { CommentModule } from './comment/comment.module';
 
 const options = {
   colorize: true,
@@ -65,6 +66,7 @@ const options = {
     CloudinaryModule,
     UserModule,
     AdminModule,
+    CommentModule,
   ],
   controllers: [],
   providers: [

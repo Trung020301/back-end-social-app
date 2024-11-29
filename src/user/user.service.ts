@@ -47,9 +47,16 @@ export class UserService {
       throw new BadRequestException('Người dùng này không tồn tại!')
 
     if (!user) throw new NotFoundException(USER_NOT_FOUND)
+    const posts = await this.PostModel.find({ userId: user._id }).sort({
+      createdAt: -1,
+    })
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { role, password, ...result } = user.toObject()
-    return result
+    return {
+      user: result,
+      posts,
+    }
   }
 
   // * [FOLLOW]
@@ -90,9 +97,7 @@ export class UserService {
           },
         ],
         userId: { $nin: blockedUserIds },
-      })
-        .populate('userId', 'username fullName avatar.url')
-        .populate('comments'),
+      }).populate('userId', 'username fullName avatar.url'),
       req.query,
     )
       .filter()

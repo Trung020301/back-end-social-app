@@ -67,16 +67,8 @@ export class UserController {
   }
 
   @Get(':username')
-  async getUserByUsername(
-    @Req() req,
-    @Res() res: Response,
-    @Param() params: { username: string },
-  ) {
-    return this.userService.getUserByUsername(
-      req.user.userId,
-      res,
-      params.username,
-    )
+  async getUserByUsername(@Req() req, @Param() params: { username: string }) {
+    return this.userService.getUserByUsername(req.user.userId, params.username)
   }
 
   // ? [POST METHOD] *********************************************************************

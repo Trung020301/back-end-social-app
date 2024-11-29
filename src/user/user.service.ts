@@ -39,20 +39,17 @@ export class UserService {
     }
   }
 
-  async getUserByUsername(
-    userId: mongoose.Types.ObjectId,
-    res: Response,
-    username: string,
-  ) {
+  async getUserByUsername(userId: mongoose.Types.ObjectId, username: string) {
     const user = await this.UserModel.findOne({
       username,
     })
 
     if (!user) throw new NotFoundException(USER_NOT_FOUND)
     if (user._id.toString() === userId.toString())
-      return res.status(302).json({
-        message: 'Bạn không thể xem thông tin của chính mình!',
-      })
+      return {
+        status: 302,
+        message: 'Bạn đang xem trang cá nhân của mình',
+      }
 
     if (user.blockedUsers.includes(userId))
       throw new BadRequestException('Người dùng này không tồn tại!')
@@ -64,13 +61,10 @@ export class UserService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { role, password, ...result } = user.toObject()
 
-    res.status(200).json({
-      status: SUCCESS,
-      data: {
-        user: result,
-        posts,
-      },
-    })
+    return {
+      user,
+      posts,
+    }
   }
 
   // * [FOLLOW]

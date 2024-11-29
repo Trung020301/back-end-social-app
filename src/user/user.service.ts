@@ -171,6 +171,53 @@ export class UserService {
     })
   }
 
+  async getExploreUserFromUserProfile(
+    userId: mongoose.Types.ObjectId,
+    username: string,
+    res: Response,
+  ) {
+    const requestUser = await this.findUserById(userId)
+    const targetUser = await this.UserModel.findOne({ username })
+
+    if (!targetUser) throw new NotFoundException(USER_NOT_FOUND)
+
+    const blockedUserIds = requestUser.blockedUsers.map((id) => id.toString())
+
+    const users = await this.UserModel.aggregate([
+      {
+        $match: {
+          _id: { $nin: [...blockedUserIds, requestUser._id, targetUser._id] },
+        },
+      },
+      {
+        $sample: { size: 10 },
+      },
+      {
+        $project: {
+          username: 1,
+          fullName: 1,
+          avatar: 1,
+          blockedUsers: 1,
+          followers: 1,
+        },
+      },
+    ])
+
+    const checkYouHasBeenBlocked = users.filter((user: User) =>
+      user.blockedUsers.includes(userId),
+    )
+    const filterUser: User[] = users.filter(
+      (user: User) => !checkYouHasBeenBlocked.includes(user),
+    )
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        users: filterUser,
+      },
+    })
+  }
+
   // ? [POST METHOD] *********************************************************************
 
   async toggleFollowUser(

@@ -26,3 +26,8 @@ export enum AccountStatusEnum {
   public = 'public',
   private = 'private',
 }
+
+export enum TypeExploreUserEnum {
+  my_profile = 'my_profile',
+  user_profile = 'user_profile',
+}

@@ -45,9 +45,25 @@ export class UserController {
     return this.userService.getNewsFeed(req.user.userId, req, res)
   }
 
-  @Get('/explore-user')
+  @Get('explore-user')
   async exploreUser(@Req() req, @Res() res: Response) {
     return this.userService.getExploreUsers(req.user.userId, req, res)
+  }
+
+  @Get('explore-user/:username')
+  async exploreUserFromUserProfile(
+    @Req() req,
+    @Param()
+    params: {
+      username: string
+    },
+    @Res() res: Response,
+  ) {
+    return this.userService.getExploreUserFromUserProfile(
+      req.user.userId,
+      params.username,
+      res,
+    )
   }
 
   @Get(':username')

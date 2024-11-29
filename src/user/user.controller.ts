@@ -18,6 +18,7 @@ import { UpdatePasswordDto } from 'src/dtos/user/update-password.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { InteractUserDto } from 'src/dtos/user/interact-user.dto'
 import { Response } from 'express'
+import { ToggleSavePostDto } from 'src/dtos/post/save-post.dto'
 
 @Controller('user')
 export class UserController {
@@ -66,6 +67,18 @@ export class UserController {
     )
   }
 
+  @Post('save-post')
+  async toggleSavePost(
+    @Req() req,
+    @Body() toggleSavePostDto: ToggleSavePostDto,
+  ) {
+    return this.userService.toggleSavePost(
+      req.user.userId,
+      toggleSavePostDto.postId,
+    )
+  }
+
+  // ? [UPDATE METHOD] *********************************************************************
   @Patch('update-profile')
   async updateProfile(@Req() req, @Body() body) {
     return this.userService.updateProfile(req.user.userId, body)
@@ -85,11 +98,6 @@ export class UserController {
     return this.userService.changeAvatar(req.user.userId, file)
   }
 
-  @Delete()
-  async deleteMyAccount(@Req() req) {
-    return this.userService.deleteMyAccount(req.user.userId)
-  }
-
   @Post('interact/block-user')
   async blockUser(@Req() req, @Body() blockUserDto: InteractUserDto) {
     return this.userService.blockUser(
@@ -104,5 +112,11 @@ export class UserController {
       req.user.userId,
       unblockUserDto.targetUserId,
     )
+  }
+
+  // ? [DELETE METHOD] *********************************************************************
+  @Delete()
+  async deleteMyAccount(@Req() req) {
+    return this.userService.deleteMyAccount(req.user.userId)
   }
 }

@@ -32,8 +32,11 @@ export class Post extends Document {
   @Prop({ type: mongoose.Types.ObjectId, ref: 'User', default: [] })
   likes: mongoose.Types.ObjectId[]
 
-  @Prop({ type: mongoose.Types.ObjectId, ref: 'Post', default: [] })
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'Comment', default: [] })
   comments: mongoose.Types.ObjectId[]
+
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'User', default: [] })
+  shares: mongoose.Types.ObjectId[]
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post)

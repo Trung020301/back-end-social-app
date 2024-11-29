@@ -90,7 +90,9 @@ export class UserService {
           },
         ],
         userId: { $nin: blockedUserIds },
-      }).populate('userId', 'username fullName avatar.url'),
+      })
+        .populate('userId', 'username fullName avatar.url')
+        .populate('comments'),
       req.query,
     )
       .filter()
@@ -104,16 +106,26 @@ export class UserService {
       posts.map(async (post: Post) => {
         const author = await this.findUserById(post.userId)
         if (author.blockedUsers.includes(userId)) return null
-        return post
+
+        // Kiểm tra xem người dùng đã "like" bài viết hay chưa
+        const isLikedPost = post.likes.includes(userId)
+        const isSavedPost = user.savedPosts.includes(post.id)
+
+        // Thêm trường isLikedPost vào bài viết
+        return {
+          ...post.toObject(), // Chuyển đổi post sang đối tượng thông thường
+          isLikedPost,
+          isSavedPost,
+        }
       }),
     )
 
-    filteredPosts.filter((post) => post !== null)
+    const finalPosts = filteredPosts.filter((post) => post !== null)
 
     res.status(200).json({
       status: SUCCESS,
       data: {
-        posts: filteredPosts,
+        posts: finalPosts,
       },
     })
   }
@@ -178,6 +190,27 @@ export class UserService {
     await targetUser.save()
     return {
       isFollowing: !isFollowing,
+    }
+  }
+
+  async toggleSavePost(
+    userId: mongoose.Types.ObjectId,
+    postId: mongoose.Types.ObjectId,
+  ): Promise<{
+    isSavedPost: boolean
+  }> {
+    const user = await this.findUserById(userId)
+    if (user.savedPosts.includes(postId)) {
+      user.savedPosts = user.savedPosts.filter(
+        (id) => id.toString() !== postId.toString(),
+      )
+      await user.save()
+    } else {
+      user.savedPosts = [...user.savedPosts, postId]
+      await user.save()
+    }
+    return {
+      isSavedPost: user.savedPosts.includes(postId),
     }
   }
 

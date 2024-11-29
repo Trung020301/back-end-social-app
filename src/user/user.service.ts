@@ -41,31 +41,36 @@ export class UserService {
 
   async getUserByUsername(
     userId: mongoose.Types.ObjectId,
-    username: string,
     res: Response,
+    username: string,
   ) {
     const user = await this.UserModel.findOne({
       username,
     })
+
+    if (!user) throw new NotFoundException(USER_NOT_FOUND)
+    if (user._id.toString() === userId.toString())
+      return res.status(302).json({
+        message: 'Bạn không thể xem thông tin của chính mình!',
+      })
+
     if (user.blockedUsers.includes(userId))
       throw new BadRequestException('Người dùng này không tồn tại!')
 
-    if (!user) throw new NotFoundException(USER_NOT_FOUND)
     const posts = await this.PostModel.find({ userId: user._id }).sort({
       createdAt: -1,
     })
 
-    if (user._id.toString() === userId.toString())
-      return res.status(302).json({
-        message: 'Đây là trang cá nhân của bạn',
-      })
-
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { role, password, ...result } = user.toObject()
-    return {
-      user: result,
-      posts,
-    }
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        user: result,
+        posts,
+      },
+    })
   }
 
   // * [FOLLOW]

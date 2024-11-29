@@ -39,7 +39,11 @@ export class UserService {
     }
   }
 
-  async getUserByUsername(userId: mongoose.Types.ObjectId, username: string) {
+  async getUserByUsername(
+    userId: mongoose.Types.ObjectId,
+    username: string,
+    res: Response,
+  ) {
     const user = await this.UserModel.findOne({
       username,
     })
@@ -50,6 +54,11 @@ export class UserService {
     const posts = await this.PostModel.find({ userId: user._id }).sort({
       createdAt: -1,
     })
+
+    if (user._id.toString() === userId.toString())
+      return res.status(302).json({
+        message: 'Đây là trang cá nhân của bạn',
+      })
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { role, password, ...result } = user.toObject()

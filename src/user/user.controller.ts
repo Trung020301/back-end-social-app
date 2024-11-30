@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   Req,
   Res,
   UploadedFile,
@@ -64,6 +65,11 @@ export class UserController {
       params.username,
       res,
     )
+  }
+
+  @Get('find-user')
+  async getUserByQuery(@Req() req, @Query() query, @Res() res: Response) {
+    return this.userService.getUserByQuery(req.user.userId, query.q, res)
   }
 
   @Get(':username')

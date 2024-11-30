@@ -67,6 +67,34 @@ export class UserService {
     }
   }
 
+  async getUserByQuery(
+    userId: mongoose.Types.ObjectId,
+    query: string,
+    res: Response,
+  ) {
+    const user = await this.findUserById(userId)
+    const blockedUsers = user.blockedUsers
+
+    const users = await this.UserModel.find({
+      username: { $regex: query, $options: 'i' },
+      _id: { $nin: blockedUsers, $ne: userId },
+    })
+
+    const checkYouHasBeenBlocked = users.filter((user: User) =>
+      user.blockedUsers.includes(userId),
+    )
+    const filterUser = users.filter(
+      (user) => !checkYouHasBeenBlocked.includes(user),
+    )
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        users: filterUser,
+      },
+    })
+  }
+
   // * [FOLLOW]
   async getFollowers(
     userId: mongoose.Types.ObjectId,

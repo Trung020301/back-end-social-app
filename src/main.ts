@@ -20,10 +20,10 @@ async function bootstrap() {
     }),
   )
   app.enableCors({
-    origin: ['https://next-social-client.vercel.app', 'http://localhost:3000'],
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
     credentials: true,
-    allowedHeaders: 'Content-Type, Accept',
   })
 
   await app.listen(process.env.PORT ?? 3000)

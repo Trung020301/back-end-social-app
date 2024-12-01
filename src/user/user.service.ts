@@ -43,8 +43,11 @@ export class UserService {
     const user = await this.UserModel.findOne({
       username,
     })
+    const requestUser = await this.findUserById(userId)
+    const isUserHasBeenBlocked = requestUser.blockedUsers.includes(user.id)
 
-    if (!user) throw new NotFoundException(USER_NOT_FOUND)
+    if (!user || isUserHasBeenBlocked)
+      throw new NotFoundException(USER_NOT_FOUND)
     if (user._id.toString() === userId.toString())
       return {
         status: 302,
@@ -62,7 +65,7 @@ export class UserService {
     const { role, password, ...result } = user.toObject()
 
     return {
-      user,
+      user: result,
       posts,
     }
   }

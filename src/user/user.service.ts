@@ -114,6 +114,16 @@ export class UserService {
     return user.following
   }
 
+  async getBlockedUsers(userId: mongoose.Types.ObjectId, res: Response) {
+    const user = await this.findUserById(userId)
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        blockedUsers: user.blockedUsers,
+      },
+    })
+  }
+
   async getNewsFeed(
     userId: mongoose.Types.ObjectId,
     req: Request,
@@ -183,11 +193,14 @@ export class UserService {
   ) {
     const user = await this.findUserById(userId)
     const blockedUserIds = user.blockedUsers.map((id) => id.toString())
+    const listUserHasFollowed = user.following.map((id) => id.toString())
     const select = '_id username fullName avatar blockedUsers followers'
 
     const features = new APIFeatures(
       this.UserModel.find({
-        _id: { $nin: blockedUserIds, $ne: userId },
+        _id: {
+          $nin: [...blockedUserIds, userId, ...listUserHasFollowed],
+        },
       }).select(select),
       req.query,
     )
@@ -215,6 +228,7 @@ export class UserService {
   async getExploreUserFromUserProfile(
     userId: mongoose.Types.ObjectId,
     username: string,
+    req: Request,
     res: Response,
   ) {
     const requestUser = await this.findUserById(userId)
@@ -223,26 +237,30 @@ export class UserService {
     if (!targetUser) throw new NotFoundException(USER_NOT_FOUND)
 
     const blockedUserIds = requestUser.blockedUsers.map((id) => id.toString())
+    const listUserHasFollowed = requestUser.following.map((id) => id.toString())
+    console.log('blockedUserIds >>> ', blockedUserIds)
+    console.log('listUserHasFollowed >>> ', listUserHasFollowed)
+    const select = '_id username fullName avatar blockedUsers followers'
 
-    const users = await this.UserModel.aggregate([
-      {
-        $match: {
-          _id: { $nin: [...blockedUserIds, requestUser._id, targetUser._id] },
+    const features = new APIFeatures(
+      this.UserModel.find({
+        _id: {
+          $nin: [
+            ...blockedUserIds,
+            userId,
+            targetUser._id,
+            ...listUserHasFollowed,
+          ],
         },
-      },
-      {
-        $sample: { size: 10 },
-      },
-      {
-        $project: {
-          username: 1,
-          fullName: 1,
-          avatar: 1,
-          blockedUsers: 1,
-          followers: 1,
-        },
-      },
-    ])
+      }).select(select),
+      req.query,
+    )
+      .filter()
+      .sorting()
+      .limit()
+      .pagination()
+
+    const users = await features.mongooseQuery
 
     const checkYouHasBeenBlocked = users.filter((user: User) =>
       user.blockedUsers.includes(userId),

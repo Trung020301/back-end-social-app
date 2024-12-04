@@ -63,6 +63,7 @@ export class UserController {
     return this.userService.getExploreUserFromUserProfile(
       req.user.userId,
       params.username,
+      req,
       res,
     )
   }
@@ -70,6 +71,11 @@ export class UserController {
   @Get('find-user')
   async getUserByQuery(@Req() req, @Query() query, @Res() res: Response) {
     return this.userService.getUserByQuery(req.user.userId, query.q, res)
+  }
+
+  @Get('blocked-list')
+  async getBlockedUsers(@Req() req, @Res() res: Response) {
+    return this.userService.getBlockedUsers(req.user.userId, res)
   }
 
   @Get(':username')

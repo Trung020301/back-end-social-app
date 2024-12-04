@@ -31,3 +31,9 @@ export enum TypeExploreUserEnum {
   my_profile = 'my_profile',
   user_profile = 'user_profile',
 }
+
+export enum TypeGenderUserEnum {
+  male = 'male',
+  female = 'female',
+  other = 'other',
+}

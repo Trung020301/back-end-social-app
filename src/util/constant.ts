@@ -8,6 +8,7 @@ export const INVALID_TOKEN = 'invalid_token'
 export const ACCESS_DENIED = 'access_denied'
 export const BAD_REQUEST = 'bad_request'
 export const SUCCESS = 'success'
+export const FAILURE = 'failure'
 
 export const DEFAULT_PAGE = 1
 export const DEFAULT_LIMIT = 10

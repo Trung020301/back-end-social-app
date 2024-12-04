@@ -1,6 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import mongoose, { HydratedDocument } from 'mongoose'
-import { AccountStatusEnum, Role, TypeGenderUserEnum } from 'src/util/enum'
+import {
+  AccountStatusEnum,
+  Role,
+  TypeGenderUserEnum,
+  TypeStatusAccountEnum,
+} from 'src/util/enum'
 import { ImageInterface } from 'src/util/interface'
 
 export type UserDocument = HydratedDocument<User>
@@ -42,6 +47,11 @@ export class User {
 
   @Prop({ default: Role.User })
   role: string
+
+  @Prop({
+    default: TypeStatusAccountEnum.active,
+  })
+  status: TypeStatusAccountEnum
 
   @Prop({
     type: mongoose.Types.ObjectId,

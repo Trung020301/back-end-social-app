@@ -61,12 +61,14 @@ export class UserService {
       createdAt: -1,
     })
 
+    const totalPosts = posts.length
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { role, password, ...result } = user.toObject()
 
     return {
       user: result,
-      posts,
+      posts: totalPosts,
     }
   }
 

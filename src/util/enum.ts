@@ -37,3 +37,18 @@ export enum TypeGenderUserEnum {
   female = 'female',
   other = 'other',
 }
+
+export enum TypePasswordResetTokenStatusEnum {
+  pending = 'pending',
+  expired = 'expired',
+}
+
+export enum TypeEmailVerificationTokenStatusEnum {
+  pending = 'pending',
+  expired = 'expired',
+}
+
+export enum TypeStatusAccountEnum {
+  active = 'active',
+  banned = 'banned',
+}

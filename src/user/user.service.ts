@@ -379,23 +379,31 @@ export class UserService {
     const user = await this.findUserById(userId)
     const targetUser = await this.findUserById(targetUserId)
 
-    const checkTargetUserIdHasFollowed = targetUser.following.includes(userId)
-    const checkTargetUserHasFollower = user.followers.includes(targetUserId)
+    const isFollowTargetUser = user.following.includes(targetUserId)
+    const isTargetUserFollowYou = targetUser.following.includes(userId)
 
     if (!user || !targetUser) throw new NotFoundException(USER_NOT_FOUND)
     if (user.blockedUsers.includes(targetUserId))
       throw new BadRequestException('Người dùng này đã bị chặn')
     user.blockedUsers = [...user.blockedUsers, targetUserId]
 
-    if (checkTargetUserHasFollower)
-      user.followers = user.followers.filter(
+    if (isFollowTargetUser) {
+      user.following = user.following.filter(
         (id) => id.toString() !== targetUserId.toString(),
       )
-
-    if (checkTargetUserIdHasFollowed)
-      targetUser.following = targetUser.following.filter(
+      targetUser.followers = targetUser.followers.filter(
         (id) => id.toString() !== userId.toString(),
       )
+    }
+
+    if (isTargetUserFollowYou) {
+      targetUser.followers = targetUser.followers.filter(
+        (id) => id.toString() !== userId.toString(),
+      )
+      user.following = user.following.filter(
+        (id) => id.toString() !== targetUserId.toString(),
+      )
+    }
 
     await user.save()
     await targetUser.save()

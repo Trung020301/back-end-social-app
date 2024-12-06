@@ -79,7 +79,6 @@ export class UserService {
   ) {
     const user = await this.findUserById(userId)
     const blockedUsers = user.blockedUsers
-
     const users = await this.UserModel.find({
       username: { $regex: query, $options: 'i' },
       _id: { $nin: blockedUsers, $ne: userId },

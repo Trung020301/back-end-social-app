@@ -102,15 +102,56 @@ export class UserService {
   // * [FOLLOW]
   async getFollowers(
     userId: mongoose.Types.ObjectId,
-  ): Promise<mongoose.Types.ObjectId[]> {
-    const user = await this.UserModel.findById(userId)
-    return user.followers
+    req: Request,
+    res: Response,
+  ) {
+    const user = await this.findUserById(userId)
+    const features = new APIFeatures(
+      this.UserModel.find({
+        _id: { $in: user.followers },
+      }).select('_id username fullName avatar.url'),
+      req.query,
+    )
+      .limit()
+      .filter()
+      .sorting()
+      .pagination()
+
+    const users = await features.mongooseQuery
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        followers: users,
+      },
+    })
   }
 
-  async getFollowing(userId: mongoose.Types.ObjectId) {
-    const user = await this.UserModel.findById(userId)
+  async getFollowing(
+    userId: mongoose.Types.ObjectId,
+    req: Request,
+    res: Response,
+  ) {
+    const user = await this.findUserById(userId)
+    const features = new APIFeatures(
+      this.UserModel.find({
+        _id: { $in: user.following },
+      }).select('_id username fullName avatar.url'),
+      req.query,
+    )
+      .limit()
+      .filter()
+      .sorting()
+      .pagination()
 
-    return user.following
+    const users = await features.mongooseQuery
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        users: users,
+      },
+    })
   }
 
   async getBlockedUsers(userId: mongoose.Types.ObjectId, res: Response) {

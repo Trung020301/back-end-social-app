@@ -1,6 +1,8 @@
 import {
+  MiddlewareConsumer,
   // MiddlewareConsumer,
   Module,
+  NestModule,
   // NestModule,
   // RequestMethod,
 } from '@nestjs/common'
@@ -19,7 +21,9 @@ import { UserModule } from './user/user.module'
 import { AdminModule } from './admin/admin.module'
 // import { CheckBlockMiddleware } from './middlewares/user.middleware'
 // import { PostController } from './post/post.controller'
-import { CommentModule } from './comment/comment.module';
+import { CommentModule } from './comment/comment.module'
+import { UserController } from './user/user.controller'
+import { CheckBlockMiddleware } from './middlewares/check-block.middleware'
 
 const options = {
   colorize: true,
@@ -80,8 +84,8 @@ const options = {
     },
   ],
 })
-export class AppModule {
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer.apply(CheckBlockMiddleware).forRoutes(PostController)
-  // }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CheckBlockMiddleware).forRoutes(UserController)
+  }
 }

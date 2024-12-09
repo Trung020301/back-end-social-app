@@ -32,13 +32,13 @@ export class UserController {
   }
 
   @Get('follow/get-followers')
-  async getFollowers(@Req() req) {
-    return this.userService.getFollowers(req.user.userId)
+  async getFollowers(@Req() req, @Res() res: Response) {
+    return this.userService.getFollowers(req.user.userId, req, res)
   }
 
   @Get('follow/get-following')
-  async getFollowing(@Req() req) {
-    return this.userService.getFollowing(req.user.userId)
+  async getFollowing(@Req() req, @Res() res: Response) {
+    return this.userService.getFollowing(req.user.userId, req, res)
   }
 
   @Get('feed/news-feed')

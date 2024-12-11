@@ -83,6 +83,34 @@ export class UserController {
     return this.userService.getUserByUsername(req.user.userId, params.username)
   }
 
+  @Get(':username/followers')
+  async getUserFollowers(
+    @Req() req,
+    @Param() params: { username: string },
+    @Res() res: Response,
+  ) {
+    return this.userService.getUserFollowers(
+      req.user.userId,
+      params.username,
+      req,
+      res,
+    )
+  }
+
+  @Get(':username/following')
+  async getUserFollowing(
+    @Req() req,
+    @Param() params: { username: string },
+    @Res() res: Response,
+  ) {
+    return this.userService.getUserFollowing(
+      req.user.userId,
+      params.username,
+      req,
+      res,
+    )
+  }
+
   // ? [POST METHOD] *********************************************************************
   @Post('toggle-follow-user')
   async toggleFollowUser(

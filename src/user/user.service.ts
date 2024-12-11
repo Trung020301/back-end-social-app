@@ -302,12 +302,70 @@ export class UserService {
 
     const users = await features.mongooseQuery
 
-    const checkYouHasBeenBlocked = users.filter((user: User) =>
-      user.blockedUsers.includes(userId),
+    const filterUser = this.filterBlockedUsers(users, userId)
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        users: filterUser,
+      },
+    })
+  }
+
+  async getUserFollowers(
+    requestUserId: mongoose.Types.ObjectId,
+    username: string,
+    req: Request,
+    res: Response,
+  ) {
+    const user = await this.UserModel.findOne({ username })
+    if (!user) throw new NotFoundException(USER_NOT_FOUND)
+
+    const features = new APIFeatures(
+      this.UserModel.find({
+        _id: { $in: user.followers },
+      }).select('_id username fullName avatar.url blockedUsers'),
+      req.query,
     )
-    const filterUser: User[] = users.filter(
-      (user: User) => !checkYouHasBeenBlocked.includes(user),
+      .filter()
+      .sorting()
+      .limit()
+      .pagination()
+
+    const users = await features.mongooseQuery
+
+    const filterUser = this.filterBlockedUsers(users, requestUserId)
+    // Tìm xem các user trả về có trong danh sách chặn của người dùng không
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        users: filterUser,
+      },
+    })
+  }
+
+  async getUserFollowing(
+    requestUserId: mongoose.Types.ObjectId,
+    username: string,
+    req: Request,
+    res: Response,
+  ) {
+    const user = await this.UserModel.findOne({ username })
+    if (!user) throw new NotFoundException(USER_NOT_FOUND)
+    const features = new APIFeatures(
+      this.UserModel.find({ _id: { $in: user.following } }).select(
+        '_id username fullName avatar.url blockedUsers',
+      ),
+      req.query,
     )
+      .filter()
+      .sorting()
+      .limit()
+      .pagination()
+
+    const users = await features.mongooseQuery
+    const filterUser = this.filterBlockedUsers(users, requestUserId)
 
     res.status(200).json({
       status: SUCCESS,
@@ -512,5 +570,22 @@ export class UserService {
 
   private async hashPassword(password: string): Promise<string> {
     return await bcrypt.hash(password, 10)
+  }
+
+  private filterBlockedUsers(
+    users: User[],
+    requestUserId: mongoose.Types.ObjectId,
+  ): User[] {
+    const checkYouHasBeenBlocked = users.filter((user: User) =>
+      user.blockedUsers.includes(requestUserId),
+    )
+    return users.filter((user: User) => !checkYouHasBeenBlocked.includes(user))
+  }
+
+  private checkUserHasBeenBlocked(
+    user: User,
+    requestUserId: mongoose.Types.ObjectId,
+  ): boolean {
+    return user.blockedUsers.includes(requestUserId)
   }
 }

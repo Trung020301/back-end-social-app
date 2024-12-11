@@ -20,6 +20,7 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import { InteractUserDto } from 'src/dtos/user/interact-user.dto'
 import { Response } from 'express'
 import { ToggleSavePostDto } from 'src/dtos/post/save-post.dto'
+import { RemoveFollowerDto } from 'src/dtos/user/remove-follower.dto'
 
 @Controller('user')
 export class UserController {
@@ -131,6 +132,17 @@ export class UserController {
     return this.userService.toggleSavePost(
       req.user.userId,
       toggleSavePostDto.postId,
+    )
+  }
+
+  @Post('remove-follower')
+  async removeFollower(
+    @Req() req,
+    @Body() removeFollowerDto: RemoveFollowerDto,
+  ) {
+    return this.userService.removeFollower(
+      req.user.userId,
+      removeFollowerDto.followerId,
     )
   }
 

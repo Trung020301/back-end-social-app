@@ -433,6 +433,30 @@ export class UserService {
     await user.save()
   }
 
+  async removeFollower(
+    userId: mongoose.Types.ObjectId,
+    followerId: mongoose.Types.ObjectId,
+  ) {
+    const user = await this.findUserById(userId)
+    const follower = await this.findUserById(followerId)
+    if (!user || !follower) throw new NotFoundException(USER_NOT_FOUND)
+
+    const checkFollowerId = user.followers.includes(followerId)
+    if (!checkFollowerId)
+      throw new NotFoundException(
+        'Người dùng này không tồn tại trong danh sách theo dõi của bạn.',
+      )
+
+    user.followers = user.followers.filter(
+      (id) => id.toString() !== followerId.toString(),
+    )
+    follower.following = follower.following.filter(
+      (id) => id.toString() !== userId.toString(),
+    )
+    await user.save()
+    await follower.save()
+  }
+
   // ? [PATCH METHOD] *********************************************************************
 
   async updateProfile(

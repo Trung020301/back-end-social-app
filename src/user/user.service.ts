@@ -156,10 +156,23 @@ export class UserService {
 
   async getBlockedUsers(userId: mongoose.Types.ObjectId, res: Response) {
     const user = await this.findUserById(userId)
+    const features = new APIFeatures(
+      this.UserModel.find({ _id: { $in: user.blockedUsers } }).select(
+        '_id username fullName avatar.url',
+      ),
+      {},
+    )
+      .limit()
+      .filter()
+      .sorting()
+      .pagination()
+
+    const users = await features.mongooseQuery
+
     res.status(200).json({
       status: SUCCESS,
       data: {
-        blockedUsers: user.blockedUsers,
+        users: users,
       },
     })
   }

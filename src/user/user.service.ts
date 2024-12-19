@@ -55,7 +55,7 @@ export class UserService {
       }
 
     if (user.blockedUsers.includes(userId))
-      throw new BadRequestException('Người dùng này không tồn tại!')
+      throw new NotFoundException('Người dùng này không tồn tại!')
 
     const posts = await this.PostModel.find({ userId: user.id }).sort({
       createdAt: -1,

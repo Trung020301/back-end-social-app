@@ -79,8 +79,17 @@ export class PostService {
       throw new NotFoundException(USER_NOT_FOUND)
     }
 
+    if (user.blockedUsers.includes(requestUserId)) {
+      throw new UnauthorizedException(
+        'Tài khoản của bạn không thể xem trang này',
+      )
+    }
+
     const features = new APIFeatures(
-      this.PostModel.find({ userId: user._id.toString() }),
+      this.PostModel.find({ userId: user._id.toString() }).populate(
+        'userId',
+        'username fullName avatar.url',
+      ),
       req.query,
     )
       .filter()
@@ -89,16 +98,24 @@ export class PostService {
       .pagination()
 
     const posts = await features.mongooseQuery
-    const filteredPosts = posts.filter((post) => {
-      if (post.visibility === VisibilityPostEnum.public) {
-        return true // Mọi người đều có thể xem
-      } else if (post.visibility === VisibilityPostEnum.followers) {
-        // Kiểm tra xem người dùng thực hiện yêu cầu có phải là người theo dõi không
-        return user.followers.includes(requestUserId)
-      } else if (post.visibility === VisibilityPostEnum.private) {
-        return false // Không ai có thể xem
-      }
-    })
+    const filteredPosts = posts
+      .map((post: Post) => {
+        const isLiked = post.likes.includes(requestUserId)
+        const isFollowed = user.followers.includes(requestUserId)
+        if (post.visibility === VisibilityPostEnum.public) {
+          return { ...post.toObject(), isLiked, isFollowed } // Mọi người đều có thể xem
+        } else if (post.visibility === VisibilityPostEnum.followers) {
+          // Kiểm tra xem người dùng thực hiện yêu cầu có phải là người theo dõi không
+          if (isFollowed) {
+            return { ...post.toObject(), isLiked, isFollowed }
+          } else {
+            return null // Chỉ người theo dõi mới có thể xem
+          }
+        } else if (post.visibility === VisibilityPostEnum.private) {
+          return null // Không ai có thể xem
+        }
+      })
+      .filter((post: Post) => post !== null)
     res.status(200).json({
       status: SUCCESS,
       data: {

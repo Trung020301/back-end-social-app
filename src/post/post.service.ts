@@ -100,14 +100,14 @@ export class PostService {
     const posts = await features.mongooseQuery
     const filteredPosts = posts
       .map((post: Post) => {
-        const isLiked = post.likes.includes(requestUserId)
+        const isLikedPost = post.likes.includes(requestUserId)
         const isFollowed = user.followers.includes(requestUserId)
         if (post.visibility === VisibilityPostEnum.public) {
-          return { ...post.toObject(), isLiked, isFollowed } // Mọi người đều có thể xem
+          return { ...post.toObject(), isLikedPost, isFollowed } // Mọi người đều có thể xem
         } else if (post.visibility === VisibilityPostEnum.followers) {
           // Kiểm tra xem người dùng thực hiện yêu cầu có phải là người theo dõi không
           if (isFollowed) {
-            return { ...post.toObject(), isLiked, isFollowed }
+            return { ...post.toObject(), isLikedPost, isFollowed }
           } else {
             return null // Chỉ người theo dõi mới có thể xem
           }

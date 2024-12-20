@@ -8,7 +8,12 @@ import mongoose, { Model } from 'mongoose'
 import * as bcrypt from 'bcrypt'
 import { UpdatePasswordDto } from 'src/dtos/user/update-password.dto'
 import { User } from 'src/schema/user.schema'
-import { NOT_FOUND, SUCCESS, USER_NOT_FOUND } from 'src/util/constant'
+import {
+  NOT_FOUND,
+  NOT_FOUND_IN_USER,
+  SUCCESS,
+  USER_NOT_FOUND,
+} from 'src/util/constant'
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service'
 import { CloudinaryResourceTypeEnum, VisibilityPostEnum } from 'src/util/enum'
 import { RefreshToken } from 'src/schema/refresh-token.schema'
@@ -17,6 +22,7 @@ import { Post } from 'src/schema/post.schema'
 import { APIFeatures } from 'src/util/apiFeatures'
 import { ReportPostDto } from 'src/dtos/user/report_port.dto'
 import { ReportedPost } from 'src/schema/reported-post.schema'
+import { POST_NOT_FOUND } from '../util/constant'
 
 @Injectable()
 export class UserService {
@@ -31,7 +37,6 @@ export class UserService {
   ) {}
 
   // ? [GET METHOD] *********************************************************************
-
   async getMyProfile(userId: mongoose.Types.ObjectId) {
     const user = await this.UserModel.findById(userId).select('-password')
     if (!user) throw new NotFoundException(USER_NOT_FOUND)
@@ -394,8 +399,62 @@ export class UserService {
     })
   }
 
-  // ? [POST METHOD] *********************************************************************
+  async getSavedPosts(
+    requestUserId: mongoose.Types.ObjectId,
+    req: Request,
+    res: Response,
+  ) {
+    const user = await this.findUserById(requestUserId)
+    const features = new APIFeatures(
+      this.PostModel.find({ _id: { $in: user.savedPosts } }).populate(
+        'userId',
+        'username fullName avatar.url',
+      ),
+      req.query,
+    )
+      .filter()
+      .sorting()
+      .limit()
+      .pagination()
 
+    const posts = await features.mongooseQuery
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        posts,
+      },
+    })
+  }
+  async getPostsHidden(
+    requestUserId: mongoose.Types.ObjectId,
+    req: Request,
+    res: Response,
+  ) {
+    const user = await this.findUserById(requestUserId)
+    const features = new APIFeatures(
+      this.PostModel.find({ _id: { $in: user.postsHidden } }).populate(
+        'userId',
+        'username fullName avatar.url',
+      ),
+      req.query,
+    )
+      .filter()
+      .sorting()
+      .limit()
+      .pagination()
+
+    const posts = await features.mongooseQuery
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        posts,
+      },
+    })
+  }
+
+  // ? [POST METHOD] *********************************************************************
   async toggleFollowUser(
     userId: mongoose.Types.ObjectId,
     targetUserId: mongoose.Types.ObjectId,
@@ -442,6 +501,24 @@ export class UserService {
     }
   }
 
+  async unhidePost(
+    userId: mongoose.Types.ObjectId,
+    postId: mongoose.Types.ObjectId,
+  ) {
+    const user = await this.findUserById(userId)
+    const post = await this.PostModel.findById(postId)
+    if (!post) throw new NotFoundException(POST_NOT_FOUND)
+
+    const checkPostIdExist = user.postsHidden.toString().includes(post.id)
+    if (!checkPostIdExist) throw new NotFoundException(NOT_FOUND_IN_USER)
+
+    user.postsHidden = user.postsHidden.filter(
+      (id) => id.toString() !== postId.toString(),
+    )
+    await user.save()
+  }
+
+  //?  [UPDATE METHOD] *********************************************************************
   async updatePassword(
     userId: mongoose.Types.ObjectId,
     updatePasswordDto: UpdatePasswordDto,
@@ -505,8 +582,6 @@ export class UserService {
     await newReportedPost.save()
   }
 
-  // ? [PATCH METHOD] *********************************************************************
-
   async updateProfile(
     userId: mongoose.Types.ObjectId,
     updateProfile: Partial<User>,
@@ -517,7 +592,6 @@ export class UserService {
     return user
   }
 
-  // ? [PUT METHOD] *********************************************************************
   async changeAvatar(
     userId: mongoose.Types.ObjectId,
     file: Express.Multer.File,

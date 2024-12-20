@@ -2,6 +2,7 @@
 export const USER_EXISTED = 'user_existed'
 export const USER_NOT_FOUND = 'user_not_found'
 export const POST_NOT_FOUND = 'post_not_found'
+export const NOT_FOUND_IN_USER = 'not_found_in_user'
 export const PASSWORD_NOT_MATCH = 'password_not_match'
 export const NOT_FOUND = 'not_found'
 export const INVALID_TOKEN = 'invalid_token'

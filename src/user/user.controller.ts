@@ -22,6 +22,7 @@ import { Response } from 'express'
 import { ToggleSavePostDto } from 'src/dtos/post/save-post.dto'
 import { RemoveFollowerDto } from 'src/dtos/user/remove-follower.dto'
 import { ReportPostDto } from 'src/dtos/user/report_port.dto'
+import { UnHidePostDto } from 'src/dtos/user/unhide-post.dto'
 
 @Controller('user')
 export class UserController {
@@ -113,6 +114,16 @@ export class UserController {
     )
   }
 
+  @Get('archives/saved-posts')
+  async getSavedPosts(@Req() req, @Res() res: Response) {
+    return this.userService.getSavedPosts(req.user.userId, req, res)
+  }
+
+  @Get('archives/posts-hidden')
+  async getHiddenPosts(@Req() req, @Res() res: Response) {
+    return this.userService.getPostsHidden(req.user.userId, req, res)
+  }
+
   // ? [POST METHOD] *********************************************************************
   @Post('toggle-follow-user')
   async toggleFollowUser(
@@ -144,6 +155,19 @@ export class UserController {
     return this.userService.removeFollower(
       req.user.userId,
       removeFollowerDto.followerId,
+    )
+  }
+
+  @Post('report/post')
+  async reportPost(@Req() req, @Body() ReportPostDto: ReportPostDto) {
+    return this.userService.reportPost(req.user.userId, ReportPostDto)
+  }
+
+  @Post('archives/unhide-post')
+  async unhidePost(@Req() req, @Body() unhidePostDto: UnHidePostDto) {
+    return this.userService.unhidePost(
+      req.user.userId,
+      unhidePostDto.unhidePostId,
     )
   }
 
@@ -181,11 +205,6 @@ export class UserController {
       req.user.userId,
       unblockUserDto.targetUserId,
     )
-  }
-
-  @Post('report/post')
-  async reportPost(@Req() req, @Body() ReportPostDto: ReportPostDto) {
-    return this.userService.reportPost(req.user.userId, ReportPostDto)
   }
 
   // ? [DELETE METHOD] *********************************************************************

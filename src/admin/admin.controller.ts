@@ -10,11 +10,18 @@ import { Response } from 'express'
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  //? [GET METHOD] *********************************************************************
   @Get('users')
   async getUsers(@Req() req, @Res() res) {
     return this.adminService.getUsers(req, res)
   }
 
+  @Get('posts/reported')
+  async getReportedPosts(@Req() req, @Res() res: Response) {
+    return this.adminService.getPostsHasReport(req, res)
+  }
+
+  //? [POST METHOD] *********************************************************************
   @Post('banned-user')
   async banUser(
     @Req() req,
@@ -27,4 +34,8 @@ export class AdminController {
       res,
     )
   }
+
+  //? [UPDATE METHOD] *********************************************************************
+
+  //? [DELETE METHOD] *********************************************************************
 }

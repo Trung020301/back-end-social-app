@@ -68,6 +68,9 @@ export class User {
 
   @Prop({ type: mongoose.Types.ObjectId, ref: 'Post', default: [] })
   savedPosts: mongoose.Types.ObjectId[]
+
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'Post', default: [] })
+  postsHidden: mongoose.Types.ObjectId[]
 }
 
 export const UserSchema = SchemaFactory.createForClass(User)

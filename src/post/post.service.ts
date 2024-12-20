@@ -25,28 +25,7 @@ export class PostService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async createPost(
-    createPostDto: CreatePostDto,
-    userId: Types.ObjectId,
-    files: Express.Multer.File[],
-  ) {
-    const uploadFiles = await this.cloudinaryService.uploadFiles(files, {
-      folder: 'posts',
-      resourceType: createPostDto.resourceType,
-    })
-    const mediaUrl = uploadFiles.map((file) => ({
-      url: file.secure_url,
-      public_id: file.public_id,
-    }))
-    await this.PostModel.create({
-      ...createPostDto,
-      userId,
-      mediaUrl,
-      content: createPostDto?.content,
-      MediaTypeEnum: createPostDto.resourceType,
-    })
-  }
-
+  //? [GET METHOD] *********************************************************************
   async getAllMyPosts(userId: Types.ObjectId, req: Request, res: Response) {
     const features = new APIFeatures(
       this.PostModel.find({
@@ -74,6 +53,7 @@ export class PostService {
     res: Response,
     req: Request,
   ) {
+    const userRequest = await this.UserModel.findById(requestUserId)
     const user = await this.UserModel.findOne({ username })
     if (!user) {
       throw new NotFoundException(USER_NOT_FOUND)
@@ -85,11 +65,15 @@ export class PostService {
       )
     }
 
+    const postsHidden = userRequest.postsHidden.filter(
+      (id: Types.ObjectId) => id.toString() !== user._id.toString(),
+    )
+
     const features = new APIFeatures(
-      this.PostModel.find({ userId: user._id.toString() }).populate(
-        'userId',
-        'username fullName avatar.url',
-      ),
+      this.PostModel.find({
+        userId: user._id,
+        _id: { $nin: postsHidden },
+      }).populate('userId', 'username fullName avatar.url'),
       req.query,
     )
       .filter()
@@ -124,6 +108,29 @@ export class PostService {
     })
   }
 
+  //? [POST METHOD] *********************************************************************
+  async createPost(
+    createPostDto: CreatePostDto,
+    userId: Types.ObjectId,
+    files: Express.Multer.File[],
+  ) {
+    const uploadFiles = await this.cloudinaryService.uploadFiles(files, {
+      folder: 'posts',
+      resourceType: createPostDto.resourceType,
+    })
+    const mediaUrl = uploadFiles.map((file) => ({
+      url: file.secure_url,
+      public_id: file.public_id,
+    }))
+    await this.PostModel.create({
+      ...createPostDto,
+      userId,
+      mediaUrl,
+      content: createPostDto?.content,
+      MediaTypeEnum: createPostDto.resourceType,
+    })
+  }
+
   async toggleLikePost(requestUserId: Types.ObjectId, postId: Types.ObjectId) {
     const post = await this.findPostById(postId)
     const isLikedPost = post.likes.includes(requestUserId)
@@ -153,13 +160,17 @@ export class PostService {
     await post.save()
   }
 
+  //? [DELETE METHOD] *********************************************************************
   async deletePost(requestUserId: Types.ObjectId, postId: Types.ObjectId) {
     const post = await this.findPostById(postId)
     if (post.userId.toString() !== requestUserId.toString()) {
       throw new NotFoundException('Bạn không có quyền xóa bài viết này')
     }
+    await this.deletedImage(post.mediaUrl)
+    await post.deleteOne()
   }
 
+  //? [UPDATE METHOD] *********************************************************************
   async updatePost(
     requestUserId: Types.ObjectId,
     updatePostDto: UpdatePostDto,

@@ -10,6 +10,10 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service'
 import { User, UserSchema } from 'src/schema/user.schema'
 import { RefreshToken } from 'src/schema/refresh-token.schema'
 import { Post, PostSchema } from 'src/schema/post.schema'
+import {
+  ReportedPost,
+  ReportedPostSchema,
+} from 'src/schema/reported-post.schema'
 
 @Module({
   imports: [
@@ -25,6 +29,10 @@ import { Post, PostSchema } from 'src/schema/post.schema'
       {
         name: Post.name,
         schema: PostSchema,
+      },
+      {
+        name: ReportedPost.name,
+        schema: ReportedPostSchema,
       },
     ]),
   ],

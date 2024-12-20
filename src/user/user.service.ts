@@ -8,19 +8,23 @@ import mongoose, { Model } from 'mongoose'
 import * as bcrypt from 'bcrypt'
 import { UpdatePasswordDto } from 'src/dtos/user/update-password.dto'
 import { User } from 'src/schema/user.schema'
-import { SUCCESS, USER_NOT_FOUND } from 'src/util/constant'
+import { NOT_FOUND, SUCCESS, USER_NOT_FOUND } from 'src/util/constant'
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service'
 import { CloudinaryResourceTypeEnum, VisibilityPostEnum } from 'src/util/enum'
 import { RefreshToken } from 'src/schema/refresh-token.schema'
 import { Request, Response } from 'express'
 import { Post } from 'src/schema/post.schema'
 import { APIFeatures } from 'src/util/apiFeatures'
+import { ReportPostDto } from 'src/dtos/user/report_port.dto'
+import { ReportedPost } from 'src/schema/reported-post.schema'
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User.name) private UserModel: Model<User>,
     @InjectModel(Post.name) private PostModel: Model<Post>,
+    @InjectModel(ReportedPost.name)
+    private ReportedPostModel: Model<ReportedPost>,
     @InjectModel(RefreshToken.name)
     private RefreshTokenModel: Model<RefreshToken>,
     private readonly cloudinaryService: CloudinaryService,
@@ -186,6 +190,9 @@ export class UserService {
 
     const followingUserIds = user.following.map((id) => id.toString())
     const blockedUserIds = user.blockedUsers.map((id) => id.toString())
+    const postsHidden = user.postsHidden.map((id) => id.toString())
+
+    console.log('PostHidden >>> ', postsHidden)
 
     const features = new APIFeatures(
       this.PostModel.find({
@@ -201,6 +208,7 @@ export class UserService {
           },
         ],
         userId: { $nin: blockedUserIds },
+        _id: { $nin: postsHidden },
       }).populate('userId', 'username fullName avatar.url'),
       req.query,
     )
@@ -291,8 +299,6 @@ export class UserService {
 
     const blockedUserIds = requestUser.blockedUsers.map((id) => id.toString())
     const listUserHasFollowed = requestUser.following.map((id) => id.toString())
-    console.log('blockedUserIds >>> ', blockedUserIds)
-    console.log('listUserHasFollowed >>> ', listUserHasFollowed)
     const select = '_id username fullName avatar blockedUsers followers'
 
     const features = new APIFeatures(
@@ -468,6 +474,35 @@ export class UserService {
     )
     await user.save()
     await follower.save()
+  }
+
+  async reportPost(
+    requestUserId: mongoose.Types.ObjectId,
+    reportPortDto: ReportPostDto,
+  ) {
+    const post = await this.PostModel.findById(reportPortDto.reportedPostId)
+    if (!post) throw new NotFoundException(NOT_FOUND)
+
+    if (post.userId === requestUserId)
+      throw new BadRequestException(
+        ' bạn không thể báo cáo bài viết của chính mình',
+      )
+
+    const newReportedPost = new this.ReportedPostModel({
+      requestUserId,
+      ...reportPortDto,
+    })
+    await this.UserModel.findByIdAndUpdate(
+      requestUserId,
+      {
+        $push: {
+          postsHidden: post._id,
+        },
+      },
+      { new: true },
+    )
+
+    await newReportedPost.save()
   }
 
   // ? [PATCH METHOD] *********************************************************************

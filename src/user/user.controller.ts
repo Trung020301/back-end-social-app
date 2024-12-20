@@ -21,6 +21,7 @@ import { InteractUserDto } from 'src/dtos/user/interact-user.dto'
 import { Response } from 'express'
 import { ToggleSavePostDto } from 'src/dtos/post/save-post.dto'
 import { RemoveFollowerDto } from 'src/dtos/user/remove-follower.dto'
+import { ReportPostDto } from 'src/dtos/user/report_port.dto'
 
 @Controller('user')
 export class UserController {
@@ -180,6 +181,11 @@ export class UserController {
       req.user.userId,
       unblockUserDto.targetUserId,
     )
+  }
+
+  @Post('report/post')
+  async reportPost(@Req() req, @Body() ReportPostDto: ReportPostDto) {
+    return this.userService.reportPost(req.user.userId, ReportPostDto)
   }
 
   // ? [DELETE METHOD] *********************************************************************

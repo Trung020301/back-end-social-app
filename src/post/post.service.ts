@@ -30,7 +30,7 @@ export class PostService {
     const features = new APIFeatures(
       this.PostModel.find({
         userId,
-      }),
+      }).populate('userId', 'username fullName avatar.url'),
       req.query,
     )
       .filter()

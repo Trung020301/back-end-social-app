@@ -71,7 +71,7 @@ export class PostService {
 
     const features = new APIFeatures(
       this.PostModel.find({
-        userId: user._id,
+        userId: user._id.toString(),
         _id: { $nin: postsHidden },
       }).populate('userId', 'username fullName avatar.url'),
       req.query,
@@ -100,6 +100,7 @@ export class PostService {
         }
       })
       .filter((post: Post) => post !== null)
+
     res.status(200).json({
       status: SUCCESS,
       data: {

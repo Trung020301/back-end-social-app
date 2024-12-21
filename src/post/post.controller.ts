@@ -40,8 +40,8 @@ export class PostController {
 
   @Get('collection/:username')
   async getPostsByUsername(
-    @Res() res,
     @Req() req,
+    @Res() res,
     @Param()
     params: {
       username: string

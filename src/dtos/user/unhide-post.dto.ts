@@ -1,7 +1,8 @@
 import mongoose from 'mongoose'
-import { IsNotEmpty } from 'class-validator'
+import { IsArray, IsNotEmpty } from 'class-validator'
 
 export class UnHidePostDto {
   @IsNotEmpty()
-  unhidePostId: mongoose.Types.ObjectId
+  @IsArray()
+  unhidePostIds: mongoose.Types.ObjectId[]
 }

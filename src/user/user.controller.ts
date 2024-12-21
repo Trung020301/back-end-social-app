@@ -165,10 +165,7 @@ export class UserController {
 
   @Post('archives/unhide-post')
   async unhidePost(@Req() req, @Body() unhidePostDto: UnHidePostDto) {
-    return this.userService.unhidePost(
-      req.user.userId,
-      unhidePostDto.unhidePostId,
-    )
+    return this.userService.unhidePosts(req.user.userId, unhidePostDto)
   }
 
   // ? [UPDATE METHOD] *********************************************************************

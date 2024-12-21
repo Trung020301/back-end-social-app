@@ -22,7 +22,7 @@ import { Post } from 'src/schema/post.schema'
 import { APIFeatures } from 'src/util/apiFeatures'
 import { ReportPostDto } from 'src/dtos/user/report_port.dto'
 import { ReportedPost } from 'src/schema/reported-post.schema'
-import { POST_NOT_FOUND } from '../util/constant'
+import { UnHidePostDto } from 'src/dtos/user/unhide-post.dto'
 
 @Injectable()
 export class UserService {
@@ -501,19 +501,19 @@ export class UserService {
     }
   }
 
-  async unhidePost(
+  async unhidePosts(
     userId: mongoose.Types.ObjectId,
-    postId: mongoose.Types.ObjectId,
+    unhidePostIds: UnHidePostDto,
   ) {
     const user = await this.findUserById(userId)
-    const post = await this.PostModel.findById(postId)
-    if (!post) throw new NotFoundException(POST_NOT_FOUND)
+    const convertPostIds = user.postsHidden.map((id) => id.toString())
+    const checkPostIdsExist = unhidePostIds.unhidePostIds.every((id) =>
+      convertPostIds.includes(id.toString()),
+    )
 
-    const checkPostIdExist = user.postsHidden.toString().includes(post.id)
-    if (!checkPostIdExist) throw new NotFoundException(NOT_FOUND_IN_USER)
-
+    if (!checkPostIdsExist) throw new NotFoundException(NOT_FOUND_IN_USER)
     user.postsHidden = user.postsHidden.filter(
-      (id) => id.toString() !== postId.toString(),
+      (id) => !unhidePostIds.unhidePostIds.toString().includes(id.toString()),
     )
     await user.save()
   }

@@ -125,6 +125,12 @@ export class UserController {
   }
 
   // ? [POST METHOD] *********************************************************************
+
+  @Post('check-admin')
+  async checkUserIsAdmin(@Req() req) {
+    return this.userService.checkUserIsAdmin(req.user.userId)
+  }
+
   @Post('toggle-follow-user')
   async toggleFollowUser(
     @Req() req,

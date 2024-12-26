@@ -455,6 +455,14 @@ export class UserService {
   }
 
   // ? [POST METHOD] *********************************************************************
+
+  async checkUserIsAdmin(userId: mongoose.Types.ObjectId) {
+    const user = await this.findUserById(userId)
+    return {
+      isAdmin: user.role === 'admin',
+    }
+  }
+
   async toggleFollowUser(
     userId: mongoose.Types.ObjectId,
     targetUserId: mongoose.Types.ObjectId,

@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Request, Response } from 'express'
 import mongoose, { Model } from 'mongoose'
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service'
+import { ChangeStatusResolveDto } from 'src/dtos/admin/change-status-resolve.dto'
 import { DetelePostsDto } from 'src/dtos/admin/delete-posts.dto'
 import { Post } from 'src/schema/post.schema'
 import { ReportedPost } from 'src/schema/reported-post.schema'
@@ -55,6 +56,17 @@ export class AdminService {
     })
   }
 
+  async getPost(postId: mongoose.Types.ObjectId) {
+    const post = await (
+      await this.PostModel.findById(postId)
+    ).populate('userId', 'username fullName avatar.url')
+    if (!post) {
+      throw new NotFoundException('Post not found')
+    }
+
+    return post
+  }
+
   //? [POST METHOD] *********************************************************************
   async banUserByUserId(
     requestUserId: mongoose.Types.ObjectId,
@@ -85,13 +97,46 @@ export class AdminService {
   }
 
   //? [UPDATE METHOD] *********************************************************************
-
-  //? [DELETE METHOD] *********************************************************************
-  async deletePosts(
-    req: Request,
-    deletePostsDto: DetelePostsDto,
+  async resolveReportedPost(
+    changeStatusResolveDto: ChangeStatusResolveDto,
     res: Response,
   ) {
+    const post = await this.ReportedPostModel.findById(
+      changeStatusResolveDto.reportedPostId,
+    )
+    if (!post) {
+      return res.status(404).json({
+        status: FAILURE,
+        message: 'Post not found',
+      })
+    }
+
+    post.resolved = changeStatusResolveDto.resolve
+    await post.save()
+  }
+
+  //? [DELETE METHOD] *********************************************************************
+  async deletePostByPostId(postId: mongoose.Types.ObjectId, res: Response) {
+    const post = await this.getPost(postId)
+    await this.deletedImage(post.mediaUrl)
+    await this.PostModel.findByIdAndDelete(postId)
+
+    const reportedPost = await this.ReportedPostModel.findByIdAndUpdate(
+      { reportedPostId: postId },
+      { resolved: true },
+    )
+
+    if (reportedPost) {
+      await reportedPost.save()
+    }
+
+    return res.status(200).json({
+      status: SUCCESS,
+      message: 'Delete post successfully',
+    })
+  }
+
+  async deletePosts(deletePostsDto: DetelePostsDto, res: Response) {
     const posts = await this.PostModel.find({
       _id: { $in: deletePostsDto.postIds },
     })

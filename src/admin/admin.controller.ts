@@ -52,6 +52,19 @@ export class AdminController {
     )
   }
 
+  @Post('unban-user')
+  async unbanUser(
+    @Req() req,
+    @Body() bannedId: BanUserDto,
+    @Res() res: Response,
+  ) {
+    return this.adminService.unBanUserByUserId(
+      req.user.userId,
+      bannedId.userId,
+      res,
+    )
+  }
+
   //? [UPDATE METHOD] *********************************************************************
   @Patch('posts/resovle-report')
   async resolveReportedPost(

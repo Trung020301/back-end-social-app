@@ -16,6 +16,7 @@ import { NOT_FOUND, USER_EXISTED, USER_NOT_FOUND } from 'src/util/constant'
 import { SignInDto } from 'src/dtos/user/sign-in.dto'
 import { RefreshToken } from 'src/schema/refresh-token.schema'
 import { IStoreToken, IUserToken } from 'src/util/interface'
+import { TypeStatusAccountEnum } from 'src/util/enum'
 
 @Injectable()
 export class AuthService {
@@ -46,6 +47,10 @@ export class AuthService {
     })
     if (!user) {
       throw new NotFoundException(USER_NOT_FOUND)
+    }
+
+    if (user.status === TypeStatusAccountEnum.banned) {
+      throw new UnauthorizedException('Your account has been banned')
     }
     const isPasswordMatch = await bcrypt.compare(
       signInDto.password,

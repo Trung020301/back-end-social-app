@@ -30,7 +30,12 @@ export class AdminService {
 
   //? [GET METHOD] *********************************************************************
   async getUsers(req: Request, res: Response) {
-    const features = new APIFeatures(this.UserModel.find(), req.query)
+    const features = new APIFeatures(
+      this.UserModel.find({
+        role: 'user',
+      }),
+      req.query,
+    )
       .filter()
       .sorting()
       .limit()
@@ -98,6 +103,34 @@ export class AdminService {
     return res.status(200).json({
       status: SUCCESS,
       message: 'Ban user successfully',
+    })
+  }
+
+  async unBanUserByUserId(
+    requestUserId: mongoose.Types.ObjectId,
+    userId: mongoose.Types.ObjectId,
+    res: Response,
+  ) {
+    if (requestUserId.toString() === userId.toString()) {
+      return res.status(400).json({
+        status: FAILURE,
+        message: 'You cannot unban yourself',
+      })
+    }
+
+    const user = await this.findUserByUserId(userId)
+    if (user.status === TypeStatusAccountEnum.active) {
+      return res.status(400).json({
+        status: FAILURE,
+        message: 'User is already active',
+      })
+    }
+
+    user.status = TypeStatusAccountEnum.active
+    await user.save()
+    return res.status(200).json({
+      status: SUCCESS,
+      message: 'Unban user successfully',
     })
   }
 

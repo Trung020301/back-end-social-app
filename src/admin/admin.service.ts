@@ -9,7 +9,12 @@ import { Post } from 'src/schema/post.schema'
 import { ReportedPost } from 'src/schema/reported-post.schema'
 import { User, UserDocument } from 'src/schema/user.schema'
 import { APIFeatures } from 'src/util/apiFeatures'
-import { FAILURE, SUCCESS, USER_NOT_FOUND } from 'src/util/constant'
+import {
+  FAILURE,
+  POST_NOT_FOUND,
+  SUCCESS,
+  USER_NOT_FOUND,
+} from 'src/util/constant'
 import { TypeStatusAccountEnum } from 'src/util/enum'
 import { ImageInterface } from 'src/util/interface'
 
@@ -97,19 +102,18 @@ export class AdminService {
   }
 
   //? [UPDATE METHOD] *********************************************************************
-  async resolveReportedPost(
-    changeStatusResolveDto: ChangeStatusResolveDto,
-    res: Response,
-  ) {
+  async resolveReportedPost(changeStatusResolveDto: ChangeStatusResolveDto) {
     const post = await this.ReportedPostModel.findById(
       changeStatusResolveDto.reportedPostId,
     )
-    if (!post) {
-      return res.status(404).json({
-        status: FAILURE,
-        message: 'Post not found',
-      })
-    }
+    // if (!post) {
+    //   return res.status(404).json({
+    //     status: FAILURE,
+    //     message: 'Post not found',
+    //   })
+    // }
+
+    if (!post) throw new NotFoundException(POST_NOT_FOUND)
 
     post.resolved = changeStatusResolveDto.resolve
     await post.save()

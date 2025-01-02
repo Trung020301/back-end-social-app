@@ -57,9 +57,8 @@ export class AdminController {
   async resolveReportedPost(
     @Body()
     changeStatusResolveDto: ChangeStatusResolveDto,
-    @Res() res: Response,
   ) {
-    return this.adminService.resolveReportedPost(changeStatusResolveDto, res)
+    return this.adminService.resolveReportedPost(changeStatusResolveDto)
   }
 
   //? [DELETE METHOD] *********************************************************************

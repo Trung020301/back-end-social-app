@@ -50,6 +50,22 @@ export class AdminService {
     })
   }
 
+  async getPosts(req: Request, res: Response) {
+    const features = new APIFeatures(this.PostModel.find(), req.query)
+      .filter()
+      .sorting()
+      .limit()
+      .pagination()
+    const posts = await features.mongooseQuery
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        posts,
+      },
+    })
+  }
+
   async getPostsHasReport(req: Request, res: Response) {
     const features = new APIFeatures(this.ReportedPostModel.find(), req.query)
       .filter()

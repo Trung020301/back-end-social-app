@@ -29,6 +29,11 @@ export class AdminController {
     return this.adminService.getUsers(req, res)
   }
 
+  @Get('posts')
+  async getPosts(@Req() req, @Res() res) {
+    return this.adminService.getPosts(req, res)
+  }
+
   @Get('posts/reported')
   async getReportedPosts(@Req() req, @Res() res: Response) {
     return this.adminService.getPostsHasReport(req, res)

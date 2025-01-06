@@ -7,7 +7,7 @@ import {
   // RequestMethod,
 } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { LoggerModule } from 'nestjs-pino'
+// import { LoggerModule } from 'nestjs-pino'
 import { AuthModule } from './auth/auth.module'
 import { JwtModule } from '@nestjs/jwt'
 import config from './config/config'
@@ -25,14 +25,14 @@ import { CommentModule } from './comment/comment.module'
 import { UserController } from './user/user.controller'
 import { CheckBlockMiddleware } from './middlewares/check-block.middleware'
 
-const options = {
-  colorize: true,
-  translateTime: 'SYS:standard',
-  ignore: 'pid,hostname',
-  messageKey: 'msg',
-  timestampKey: 'time',
-  customColors: 'error:red,info:blue',
-}
+// const options = {
+//   colorize: true,
+//   translateTime: 'SYS:standard',
+//   ignore: 'pid,hostname',
+//   messageKey: 'msg',
+//   timestampKey: 'time',
+//   customColors: 'error:red,info:blue',
+// }
 
 @Module({
   imports: [
@@ -41,14 +41,14 @@ const options = {
       cache: true,
       load: [config],
     }),
-    LoggerModule.forRoot({
-      pinoHttp: {
-        transport: {
-          target: 'pino-pretty',
-          options,
-        },
-      },
-    }),
+    // LoggerModule.forRoot({
+    //   pinoHttp: {
+    //     transport: {
+    //       target: 'pino-pretty',
+    //       options,
+    //     },
+    //   },
+    // }),
 
     JwtModule.registerAsync({
       imports: [ConfigModule],

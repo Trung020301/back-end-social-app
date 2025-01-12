@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
@@ -9,6 +10,7 @@ import * as bcrypt from 'bcrypt'
 import { UpdatePasswordDto } from 'src/dtos/user/update-password.dto'
 import { User } from 'src/schema/user.schema'
 import {
+  ALREADY_SHARED,
   NOT_FOUND,
   NOT_FOUND_IN_USER,
   SUCCESS,
@@ -526,6 +528,23 @@ export class UserService {
     await user.save()
   }
 
+  async sharePost(
+    userId: mongoose.Types.ObjectId,
+    postId: mongoose.Types.ObjectId,
+  ) {
+    const user = await this.findUserById(userId)
+    const post = await this.PostModel.findById(postId)
+    if (!post) throw new NotFoundException(NOT_FOUND)
+    const checkUserHasBeenShared = post.shares.some(
+      (id) => id.toString() === userId.toString(),
+    )
+    if (checkUserHasBeenShared) throw new ConflictException(ALREADY_SHARED)
+    user.sharedPosts = [...user.sharedPosts, postId]
+    post.shares = [...post.shares, userId]
+    await user.save()
+    await post.save()
+  }
+
   //?  [UPDATE METHOD] *********************************************************************
   async updatePassword(
     userId: mongoose.Types.ObjectId,
@@ -638,6 +657,27 @@ export class UserService {
     )
 
     await this.UserModel.findByIdAndDelete(userId)
+  }
+
+  async removePostShared(
+    userId: mongoose.Types.ObjectId,
+    postId: mongoose.Types.ObjectId,
+  ) {
+    const user = await this.findUserById(userId)
+    if (!user.sharedPosts.includes(postId))
+      throw new NotFoundException(
+        'Bài viết này không tồn tại trong danh sách chia sẻ của bạn',
+      )
+    const post = await this.PostModel.findById(postId)
+    if (!post) throw new NotFoundException(NOT_FOUND)
+    post.shares = post.shares.filter(
+      (id) => id.toString() !== userId.toString(),
+    )
+    user.sharedPosts = user.sharedPosts.filter(
+      (id) => id.toString() !== postId.toString(),
+    )
+    await user.save()
+    await post.save()
   }
 
   async blockUser(

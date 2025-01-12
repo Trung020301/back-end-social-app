@@ -70,6 +70,9 @@ export class User {
   savedPosts: mongoose.Types.ObjectId[]
 
   @Prop({ type: mongoose.Types.ObjectId, ref: 'Post', default: [] })
+  sharedPosts: mongoose.Types.ObjectId[]
+
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'Post', default: [] })
   postsHidden: mongoose.Types.ObjectId[]
 }
 

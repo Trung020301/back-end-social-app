@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Request, Response } from 'express'
@@ -16,6 +17,7 @@ import { APIFeatures } from 'src/util/apiFeatures'
 import { SUCCESS, USER_NOT_FOUND } from 'src/util/constant'
 import { VisibilityPostEnum } from 'src/util/enum'
 import { ImageInterface } from 'src/util/interface'
+import { sensitiveWords } from 'src/util/sensitiveWords'
 
 @Injectable()
 export class PostService {
@@ -115,6 +117,9 @@ export class PostService {
     userId: Types.ObjectId,
     files: Express.Multer.File[],
   ) {
+    if (createPostDto.content) {
+      this.checkSensitiveWords(createPostDto.content)
+    }
     const uploadFiles = await this.cloudinaryService.uploadFiles(files, {
       folder: 'posts',
       resourceType: createPostDto.resourceType,
@@ -228,5 +233,12 @@ export class PostService {
 
   async deletedImage(publicIds: ImageInterface[]) {
     await this.cloudinaryService.delteFiles(publicIds)
+  }
+
+  private checkSensitiveWords(content: string): void {
+    const foundWords = sensitiveWords.filter((word) => content.includes(word))
+    if (foundWords.length > 0) {
+      throw new BadRequestException('Nội dung có chứa từ nhạy cảm')
+    }
   }
 }

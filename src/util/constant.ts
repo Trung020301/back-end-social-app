@@ -10,6 +10,7 @@ export const ACCESS_DENIED = 'access_denied'
 export const BAD_REQUEST = 'bad_request'
 export const SUCCESS = 'success'
 export const FAILURE = 'failure'
+export const ALREADY_SHARED = 'already_shared'
 
 export const DEFAULT_PAGE = 1
 export const DEFAULT_LIMIT = 10

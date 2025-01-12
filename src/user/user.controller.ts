@@ -23,6 +23,7 @@ import { ToggleSavePostDto } from 'src/dtos/post/save-post.dto'
 import { RemoveFollowerDto } from 'src/dtos/user/remove-follower.dto'
 import { ReportPostDto } from 'src/dtos/user/report_port.dto'
 import { UnHidePostDto } from 'src/dtos/user/unhide-post.dto'
+import { SharedPostDto } from 'src/dtos/user/share-post.dto'
 
 @Controller('user')
 export class UserController {
@@ -172,6 +173,19 @@ export class UserController {
   @Post('archives/unhide-post')
   async unhidePost(@Req() req, @Body() unhidePostDto: UnHidePostDto) {
     return this.userService.unhidePosts(req.user.userId, unhidePostDto)
+  }
+
+  @Post('share/create')
+  async sharePost(@Req() req, @Body() sharePostDto: SharedPostDto) {
+    return this.userService.sharePost(req.user.userId, sharePostDto.postId)
+  }
+
+  @Delete('share/remove')
+  async removeSharedPost(@Req() req, @Body() sharePostDto: SharedPostDto) {
+    return this.userService.removePostShared(
+      req.user.userId,
+      sharePostDto.postId,
+    )
   }
 
   // ? [UPDATE METHOD] *********************************************************************

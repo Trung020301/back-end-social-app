@@ -125,6 +125,25 @@ export class UserController {
     return this.userService.getPostsHidden(req.user.userId, req, res)
   }
 
+  @Get('share/get-shared-posts')
+  async getSharedPosts(@Req() req, @Res() res: Response) {
+    return this.userService.getPostShared(req.user.userId, req, res)
+  }
+
+  @Get('share/get-shared-posts/:username')
+  async getSharedPostsByUsername(
+    @Req() req,
+    @Param() params: { username: string },
+    @Res() res: Response,
+  ) {
+    return this.userService.getSharedPostByUsername(
+      req.user.userId,
+      params.username,
+      req,
+      res,
+    )
+  }
+
   // ? [POST METHOD] *********************************************************************
 
   @Post('check-admin')

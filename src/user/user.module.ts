@@ -14,6 +14,7 @@ import {
   ReportedPost,
   ReportedPostSchema,
 } from 'src/schema/reported-post.schema'
+import { Story, StorySchema } from 'src/schema/story.schema'
 
 @Module({
   imports: [
@@ -33,6 +34,10 @@ import {
       {
         name: ReportedPost.name,
         schema: ReportedPostSchema,
+      },
+      {
+        name: Story.name,
+        schema: StorySchema,
       },
     ]),
   ],

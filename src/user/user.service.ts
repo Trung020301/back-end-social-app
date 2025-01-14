@@ -293,6 +293,66 @@ export class UserService {
     })
   }
 
+  async getPostShared(
+    userId: mongoose.Types.ObjectId,
+    req: Request,
+    res: Response,
+  ) {
+    await this.findUserById(userId)
+    const features = new APIFeatures(
+      this.PostModel.find({ shares: userId }).populate(
+        'userId',
+        'username fullName avatar.url',
+      ),
+      req.query,
+    )
+      .filter()
+      .limit()
+      .sorting()
+      .pagination()
+
+    const posts = await features.mongooseQuery
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        posts,
+      },
+    })
+  }
+
+  async getSharedPostByUsername(
+    requestUserId: mongoose.Types.ObjectId,
+    username: string,
+    req: Request,
+    res: Response,
+  ) {
+    await this.findUserById(requestUserId)
+    const user = await this.UserModel.findOne({ username })
+    if (!user) throw new NotFoundException(USER_NOT_FOUND)
+
+    const features = new APIFeatures(
+      this.PostModel.find({ shares: user._id.toString() }).populate(
+        'userId',
+        'username fullName avatar.url',
+      ),
+      req.query,
+    )
+      .filter()
+      .limit()
+      .sorting()
+      .pagination()
+
+    const posts = await features.mongooseQuery
+
+    res.status(200).json({
+      status: SUCCESS,
+      data: {
+        posts,
+      },
+    })
+  }
+
   async getExploreUserFromUserProfile(
     userId: mongoose.Types.ObjectId,
     username: string,

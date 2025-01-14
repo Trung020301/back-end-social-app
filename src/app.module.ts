@@ -24,6 +24,7 @@ import { AdminModule } from './admin/admin.module'
 import { CommentModule } from './comment/comment.module'
 import { UserController } from './user/user.controller'
 import { CheckBlockMiddleware } from './middlewares/check-block.middleware'
+import { StoryModule } from './story/story.module';
 
 // const options = {
 //   colorize: true,
@@ -71,6 +72,7 @@ import { CheckBlockMiddleware } from './middlewares/check-block.middleware'
     UserModule,
     AdminModule,
     CommentModule,
+    StoryModule,
   ],
   controllers: [],
   providers: [
